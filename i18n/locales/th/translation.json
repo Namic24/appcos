@@ -1,0 +1,299 @@
+{
+  "common": {
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "clear": "ล้างค่า",
+    "ok": "ตกลง"
+  },
+  "auth": {
+    "login": {
+      "title": "เข้าสู่ระบบ",
+      "emailPlaceholder": "อีเมล์",
+      "passwordPlaceholder": "รหัสผ่าน",
+      "button": "เข้าสู่ระบบ",
+      "noAccount": "ยังไม่มีบัญชี ?",
+      "registerButton": "สมัครสมาชิก",
+      "validation": {
+        "incomplete": "ข้อมูลไม่ครบ",
+        "invalidData": "กรุณาระบุข้อมูลให้ถูกต้อง"
+      },
+      "alerts": {
+        "error": "เข้าสู่ระบบไม่สำเร็จ",
+        "success": "เข้าสู่ระบบสำเร็จ",
+        "successMessage": "กรุณากดปุ่ม OK เพื่อเข้าสู่ระบบ",
+        "ok": "ตกลง"
+      }
+    },
+    "register": {
+      "title": "สมัครสมาชิก",
+      "displayNamePlaceholder": "ชื่อสมาชิก",
+      "emailPlaceholder": "อีเมล์",
+      "passwordPlaceholder": "รหัสผ่าน",
+      "button": "สมัครสมาชิก",
+      "hasAccount": "มีบัญชีอยู่แล้ว ?",
+      "loginButton": "เข้าสู่ระบบ",
+      "validation": {
+        "incomplete": "ข้อมูลไม่ครบ",
+        "invalidData": "กรุณาระบุข้อมูลให้ถูกต้อง"
+      },
+      "alerts": {
+        "success": "ลงทะเบียนสำเร็จ",
+        "successMessage": "กรุณากดปุ่ม OK เพื่อเข้าสู่ระบบ",
+        "ok": "ตกลง"
+      },
+      "displayNameTitle": "ชื่อ-นามสกุล",
+      "phoneTitle": "เบอร์โทรศัพท์",
+      "phonePlaceholder": "กรอกเบอร์โทรศัพท์"
+    }
+  },
+  "product": {
+    "title": "ชื่อร้านค้า",
+    "price": "ราคา",
+    "description": "รายละเอียด",
+    "category": "หมวดหมู่",
+    "condition": "สภาพสินค้า",
+    "createdAt": "สร้างเมื่อ",
+    "location": "สถานที่",
+    "createProduct": "สร้างสินค้า",
+    "uploadImage": "อัพโหลดรูปภาพ",
+    "imageLimit": "สามารถอัพโหลดได้สูงสุด {{count}} รูป",
+    "alerts": {
+      "imageLimit": {
+        "upload": "สามารถอัพโหลดรูปภาพได้สูงสุด 5 รูป"
+      }
+    }
+  },
+  "profile": {
+    "myProfile": "โปรไฟล์ของฉัน",
+    "editProfile": "แก้ไขโปรไฟล์",
+    "myProducts": "สินค้าของฉัน",
+    "settings": "ตั้งค่า",
+    "noName": "ไม่ระบุชื่อ",
+    "buttons": {
+      "saved": "รายการที่บันทึกไว้",
+      "messages": "กล่องข้อความ",
+      "reviews": "รีวิว",
+      "recent": "ดูล่าสุด"
+    },
+    "editName": {
+      "save": "บันทึก",
+      "cancel": "ยกเลิก",
+      "success": "อัพเดทชื่อเรียบร้อยแล้ว",
+      "error": "ไม่สามารถอัพเดทชื่อได้"
+    },
+    "avatar": {
+      "pickTitle": "เปลี่ยนรูปโปรไฟล์",
+      "pickMessage": "เลือกวิธีการเพิ่มรูปภาพ",
+      "camera": "ถ่ายภาพ",
+      "gallery": "จากคลังภาพ",
+      "error": "ไม่สามารถอัพเดทรูปโปรไฟล์ได้"
+    },
+    "sections": {
+      "selling": {
+        "title": "การขาย",
+        "products": "รายการสินค้าของคุณ",
+        "quickActions": "การดำเนินการด่วน",
+        "followers": "ผู้ติดตามบน Marketplace",
+        "activities": "กิจกรรมกาขายทั้งหมด"
+      },
+      "settings": {
+        "title": "การตั้งค่า",
+        "following": "กำลังติดตาม"
+      },
+      "account": {
+        "title": "บัญชี",
+        "location": "ตำแหน่ง",
+        "security": "ความปลอดภัย"
+      }
+    }
+  },
+  "settings": {
+    "management": "จัดการการตั้งค่า",
+    "language": "ภาษา",
+    "notifications": "การแจ้งเตือน",
+    "location": "ตำแหน่ง",
+    "additional": "การดำเนินการเพิ่มเติม",
+    "simpleCreate": "ใช้การสร้างรายการสินค้าที่เรียบง่าย",
+    "followers": "ให้ผู้คนผู้ติดตามคุณ",
+    "customMessage": "ตั้งค่าข้อความที่กำหนดเอง",
+    "privacy": {
+      "title": "ความเป็นส่วนตัว",
+      "settings": "ตั้งค่าความเป็นส่วนตัว",
+      "security": "ความปลอดภัย"
+    },
+    "logout": {
+      "logout": "ออกจากระบบ",
+      "confirmTitle": "ยืนยันการออกจากระบบ",
+      "confirmMessage": "คุณต้องการออกจากระบบใช่หรือไม่?",
+      "error": "ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครัง"
+    },
+    "appearance": {
+      "title": "ธีม",
+      "light": "สว่าง",
+      "dark": "มืด",
+      "system": "ระบบ"
+    }
+  },
+  "create": {
+    "title": "สร้างสินค้า",
+    "fields": {
+      "title": "ชื่อสินค้า",
+      "price": "ราคา",
+      "description": "รายละเอียด",
+      "location": "สถานที่",
+      "category": "หมวดหมู่",
+      "condition": "สภาพสินค้า"
+    },
+    "placeholders": {
+      "title": "ป้อนชื่อสินค้า",
+      "price": "ป้อนราคา",
+      "description": "ป้อนรายละเอียด",
+      "location": "ป้อนสถานที่",
+      "category": "เลือกหมวดหมู่",
+      "condition": "เลือกสภาพสินค้า"
+    },
+    "validation": {
+      "title": "กรุณากรอกชื่อสินค้า",
+      "price": {
+        "required": "กรุณากรอกราคาสินค้า",
+        "invalid": "กรุณากรอกราคาสินค้าให้ถูกต้อง"
+      },
+      "description": "กรุณากรอกรายละเอียดสินค้า",
+      "category": "กรุณาเลือกหมวดหมู่สินค้า",
+      "condition": "กรุณาเลือกสภาพสินค้า",
+      "location": "กรุณากรอสถานที่",
+      "image": "กรุณาเลือกรูปภาพสินค้าอย่างน้อย 1 รูป",
+      "imageLimit": {
+        "upload": "สามารถอัพโหลดรูปภาพได้สูงสุด 5 รูป",
+        "select": "สามารถเลือกได้สูงสุด {{count}} รูป"
+      }
+    },
+    "buttons": {
+      "save": "บันทึก",
+      "saving": "กำลังบันทึก..."
+    },
+    "messages": {
+      "loginRequired": "กรุณาเข้าสู่ระบบก่อนสร้างสินค้า",
+      "success": "บันทึกสินค้าเรียบร้อยแล้ว",
+      "error": "เกิดข้อผิดพลาดในการสร้างสินค้า"
+    },
+    "alerts": {
+      "error": {
+        "required": "กรุณากรอกข้อมูลให้ครบถ้วน",
+        "update": "ไมสามารถอัพเดทสินค้าได้",
+        "image": "ไม่สามารถเลือกรูปภาพได้",
+        "imageDelete": "ไม่สามารถลบรูปภาพได้"
+      },
+      "success": {
+        "imageDelete": "ลบรูปภาพสำเร็จ"
+      }
+    },
+    "modal": {
+      "category": {
+        "title": "เลือกหมวดหมู่"
+      },
+      "condition": {
+        "title": "เลือกสภาพสินค้า",
+        "options": {
+          "new": "ใหม่",
+          "likeNew": "มือสอง - เหมือนใหม่",
+          "good": "มือสอง - สภาพดี",
+          "fair": "มือสอง - สภาพพอใช้"
+        }
+      }
+    },
+    "imagePicker": {
+      "title": "เพิ่มรูปภาพ",
+      "message": "เลือกวิธีการเพิ่มรูปภาพ",
+      "camera": "ถ่ายภาพ",
+      "library": "เลือกจากคลังภาพ",
+      "error": "ไม่สามารถเลือกรูปภาพได้",
+      "limitReached": "สามารถเพิ่มรูปภาพได้สูงสุด {{count}} รูป"
+    }
+  },
+  "bookmark": {
+    "title": "รายการสินค้าของคุณ",
+    "empty": "ไม่พบสินค้าของคุณ",
+    "product": {
+      "status": {
+        "available": "มีสินค้า"
+      }
+    },
+    "actions": {
+      "edit": "แก้ไข",
+      "delete": "ลบ"
+    },
+    "deleteAlert": {
+      "title": "ลบสินค้า",
+      "message": "คุณแน่ใจหรือไม่ที่จะลบสินค้านี้?",
+      "error": "ไม่สามารถลบสินค้าได้"
+    }
+  },
+  "home": {
+    "welcome": {
+      "title": "ยินดีต้อนรับ",
+      "guest": "บุคคลทั่วไป"
+    },
+    "search": {
+      "placeholder": "ค้นหาสินค้า..."
+    },
+    "sections": {
+      "recommended": "สินค้าแนะนำ"
+    },
+    "empty": {
+      "noProducts": "ไม่พบสินค้า",
+      "noSearchResults": "ไม่พบสินค้าที่ค้นหา"
+    }
+  },
+  "tabs": {
+    "home": "หน้าหลัก",
+    "bookmark": "สินค้าของฉัน",
+    "create": "ลงประกาศ",
+    "profile": "โปรไฟล์",
+    "settings": "ตั้งค่า"
+  },
+  "landing": {
+    "slogan": {
+      "line1": "ค้นพบประสบการณ์",
+      "line2": "ไร้ขีดจำกัดที่"
+    },
+    "description": "ค้นหาความคิดสร้างสรรค์ใหม่ได้ทุกวัน: เริ่มต้นการเดินทางของความคิดสร้างสรรที่ไร้ขีดจำกัดกับ Aura",
+    "button": "เริ่มใช้งาน"
+  },
+  "editProduct": {
+    "title": "แก้ไขสินค้า",
+    "titlePlaceholder": "ชื่อสินค้า",
+    "priceLabel": "ราคา",
+    "pricePlaceholder": "ระบุราคา",
+    "descriptionLabel": "รายละเอียด",
+    "descriptionPlaceholder": "ระบุรายละเอียดสินค้า",
+    "locationLabel": "สถานที่",
+    "locationPlaceholder": "ระบุสถานที่",
+    "categoryLabel": "หมวดหมู่",
+    "selectCategory": "เลือกหมวดหมู่",
+    "conditionLabel": "สภาพสินค้า",
+    "selectCondition": "เลือกสภาพสินค้า",
+    "existingImages": "รูปภาพปัจจุบัน",
+    "newImages": "รูปภาพใหม่",
+    "addImages": "เพิ่มรูปภาพ",
+    "updateButton": "อัพเดทสินค้า",
+    "alerts": {
+      "success": "สำเร็จ",
+      "successMessage": "อัพเดทสินค้าเรียบร้อยแล้ว",
+      "error": "ผิดพลาด",
+      "errorMessage": "ไม่สามารถอัพเดทสินค้าได้",
+      "confirmDelete": "คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?",
+      "imageDelete": {
+        "success": "ลบรูปภาพเรียบร้อยแล้ว",
+        "error": "ไม่สามารถลบรูปภาพได้"
+      },
+      "validation": {
+        "required": "กรุณากรอกข้อมูลให้ครบถ้วน"
+      }
+    }
+  }
+} 

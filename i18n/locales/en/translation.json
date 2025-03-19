@@ -1,0 +1,299 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "clear": "Reset",
+    "ok": "OK"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "button": "Login",
+      "noAccount": "Don't have an account?",
+      "registerButton": "Register",
+      "validation": {
+        "incomplete": "Incomplete Data",
+        "invalidData": "Please enter valid data"
+      },
+      "alerts": {
+        "error": "Login Failed",
+        "success": "Login Successful",
+        "successMessage": "Press OK to continue",
+        "ok": "OK"
+      }
+    },
+    "register": {
+      "title": "Register",
+      "displayNamePlaceholder": "Display Name",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "button": "Register",
+      "hasAccount": "Already have an account?",
+      "loginButton": "Login",
+      "validation": {
+        "incomplete": "Incomplete Data",
+        "invalidData": "Please enter valid data"
+      },
+      "alerts": {
+        "success": "Registration Successful",
+        "successMessage": "Press OK to login",
+        "ok": "OK"
+      },
+      "displayNameTitle": "Full Name",
+      "phoneTitle": "Phone Number",
+      "phonePlaceholder": "Enter your phone number"
+    }
+  },
+  "product": {
+    "title": "Product Name",
+    "price": "Price",
+    "description": "Description",
+    "category": "Category",
+    "condition": "Condition",
+    "createdAt": "Created At",
+    "location": "Location",
+    "createProduct": "Create Product",
+    "uploadImage": "Upload Image",
+    "imageLimit": "Can upload up to {{count}} images",
+    "alerts": {
+      "imageLimit": {
+        "upload": "Maximum 5 images allowed"
+      }
+    }
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "editProfile": "Edit Profile",
+    "myProducts": "My Products",
+    "settings": "Settings",
+    "noName": "No Name",
+    "buttons": {
+      "saved": "Saved Items",
+      "messages": "Messages",
+      "reviews": "Reviews",
+      "recent": "Recently Viewed"
+    },
+    "editName": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "success": "Name updated successfully",
+      "error": "Could not update name"
+    },
+    "avatar": {
+      "pickTitle": "Change Profile Picture",
+      "pickMessage": "Choose how to add a photo",
+      "camera": "Take Photo",
+      "gallery": "From Gallery",
+      "error": "Failed to update profile picture"
+    },
+    "sections": {
+      "selling": {
+        "title": "Selling",
+        "products": "Your Products",
+        "quickActions": "Quick Actions",
+        "followers": "Marketplace Followers",
+        "activities": "All Selling Activities"
+      },
+      "settings": {
+        "title": "Settings",
+        "following": "Following"
+      },
+      "account": {
+        "title": "Account",
+        "location": "Location",
+        "security": "Security"
+      }
+    }
+  },
+  "settings": {
+    "management": "Settings Management",
+    "language": "Language",
+    "notifications": "Notifications",
+    "location": "Location",
+    "additional": "Additional Actions",
+    "simpleCreate": "Use Simple Product Creation",
+    "followers": "Allow People to Follow You",
+    "customMessage": "Custom Message Settings",
+    "privacy": {
+      "title": "Privacy",
+      "settings": "Privacy Settings",
+      "security": "Security"
+    },
+    "logout": {
+      "logout": "Logout",
+      "confirmTitle": "Confirm Logout",
+      "confirmMessage": "Are you sure you want to logout?",
+      "error": "Failed to logout. Please try again."
+    },
+    "appearance": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "create": {
+    "title": "Create Product",
+    "fields": {
+      "title": "Product Name",
+      "price": "Price",
+      "description": "Description",
+      "location": "Location",
+      "category": "Category",
+      "condition": "Condition"
+    },
+    "placeholders": {
+      "title": "Product Name",
+      "price": "Price",
+      "description": "Description",
+      "location": "Location",
+      "category": "Category",
+      "condition": "Condition"
+    },
+    "validation": {
+      "title": "Please enter product name",
+      "price": {
+        "required": "Please enter product price",
+        "invalid": "Please enter valid price"
+      },
+      "description": "Please enter product description",
+      "category": "Please select product category",
+      "condition": "Please select product condition",
+      "location": "Please enter location",
+      "image": "Please select at least 1 product image",
+      "imageLimit": {
+        "upload": "Can upload up to 5 images",
+        "select": "Can select up to {{count}} more images"
+      }
+    },
+    "buttons": {
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "messages": {
+      "loginRequired": "Please login to create product",
+      "success": "Product saved successfully",
+      "error": "Error creating product"
+    },
+    "alerts": {
+      "error": {
+        "required": "Please fill in all required fields",
+        "update": "Failed to update product",
+        "image": "Failed to pick image",
+        "imageDelete": "Failed to delete image"
+      },
+      "success": {
+        "imageDelete": "Image deleted successfully"
+      }
+    },
+    "modal": {
+      "category": {
+        "title": "Select Category"
+      },
+      "condition": {
+        "title": "Select Condition",
+        "options": {
+          "new": "New",
+          "likeNew": "Used - Like New",
+          "good": "Used - Good",
+          "fair": "Used - Fair"
+        }
+      }
+    },
+    "imagePicker": {
+      "title": "Add Image",
+      "message": "Choose how to add an image",
+      "camera": "Take Photo",
+      "library": "Choose from Library",
+      "error": "Error picking image",
+      "limitReached": "Maximum {{count}} images allowed"
+    }
+  },
+  "bookmark": {
+    "title": "Your Products",
+    "empty": "No products found",
+    "product": {
+      "status": {
+        "available": "In Stock"
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteAlert": {
+      "title": "Delete Product",
+      "message": "Are you sure you want to delete this product?",
+      "error": "Failed to delete product"
+    }
+  },
+  "home": {
+    "welcome": {
+      "title": "Welcome",
+      "guest": "Guest"
+    },
+    "search": {
+      "placeholder": "Search products..."
+    },
+    "sections": {
+      "recommended": "Recommended Products"
+    },
+    "empty": {
+      "noProducts": "No products found",
+      "noSearchResults": "No products match your search"
+    }
+  },
+  "tabs": {
+    "home": "Home",
+    "bookmark": "Products",
+    "create": "Post",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "landing": {
+    "slogan": {
+      "line1": "Discover",
+      "line2": "Experience"
+    },
+    "description": "Find new creativity every day: Start your limitless creative journey with Aura",
+    "button": "Get Started"
+  },
+  "editProduct": {
+    "title": "Edit Product",
+    "titlePlaceholder": "Product Name",
+    "priceLabel": "Price",
+    "pricePlaceholder": "Enter price",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter product description",
+    "locationLabel": "Location",
+    "locationPlaceholder": "Enter location",
+    "categoryLabel": "Category",
+    "selectCategory": "Select Category",
+    "conditionLabel": "Condition",
+    "selectCondition": "Select Condition",
+    "existingImages": "Current Images",
+    "newImages": "New Images",
+    "addImages": "Add Images",
+    "updateButton": "Update Product",
+    "alerts": {
+      "success": "Success",
+      "successMessage": "Product updated successfully",
+      "error": "Error",
+      "errorMessage": "Failed to update product",
+      "confirmDelete": "Are you sure you want to delete this image?",
+      "imageDelete": {
+        "success": "Image deleted successfully",
+        "error": "Failed to delete image"
+      },
+      "validation": {
+        "required": "Please fill in all required fields"
+      }
+    }
+  }
+} 
