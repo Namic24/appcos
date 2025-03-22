@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "Aurashop",
-    "slug": "aurashop",
+    "name": "Appcosplay",
+    "slug": "appcosplay",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://i.pinimg.com/736x/1d/b8/0e/1db80e668536283ff38d29f7b47d8ec3.jpg",
+    "icon": "https://i.pinimg.com/736x/29/27/a7/2927a765fea640068d341ad60309180a.jpg",   
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "https://i.pinimg.com/736x/1d/b8/0e/1db80e668536283ff38d29f7b47d8ec3.jpg",
+      "image": "https://i.pinimg.com/736x/29/27/a7/2927a765fea640068d341ad60309180a.jpg",
       "resizeMode": "contain",
-      "backgroundColor": "#161622"
+      "backgroundColor": "#ffd3dd"
     },
     "ios": {
-      "bundleIdentifier": "com.itgenius.aurashop",
+      "bundleIdentifier": "com.itgenius.appcosplay",
       "supportsTablet": true,
       "userInterfaceStyle": "automatic",
       "infoPlist": {
@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "com.itgenius.aurashop",
+      "package": "com.itgenius.appcosplay",
       "versionCode": 1,
       "ndkVersion": "26.0.10792818",
       "adaptiveIcon": {

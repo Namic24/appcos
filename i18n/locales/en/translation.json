@@ -33,6 +33,9 @@
       "displayNamePlaceholder": "Display Name",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Password",
+      "birthdayPlaceholder" : "birthday",
+      "addressPlaceholder": "address",
+      "genderPlaceholder": "gender",
       "button": "Register",
       "hasAccount": "Already have an account?",
       "loginButton": "Login",
@@ -47,7 +50,13 @@
       },
       "displayNameTitle": "Full Name",
       "phoneTitle": "Phone Number",
-      "phonePlaceholder": "Enter your phone number"
+      "phonePlaceholder": "Enter your phone number",
+      "birthdayTitle" : "Enter your birthday",
+      "addressTitle" : "Enter your address",
+      "genderTitle" : "Select Gender",
+      "male": "male" ,
+      "female" : "female",
+      "other": "LGBTQ"
     }
   },
   "product": {

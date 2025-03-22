@@ -33,6 +33,9 @@
       "displayNamePlaceholder": "ชื่อสมาชิก",
       "emailPlaceholder": "อีเมล์",
       "passwordPlaceholder": "รหัสผ่าน",
+      "birthdayPlaceholder" : "เลือกวันเกิด",
+      "addressPlaceholder": "กรอกที่อยู่",
+      "genderPlaceholder": "เลือกเพศ",
       "button": "สมัครสมาชิก",
       "hasAccount": "มีบัญชีอยู่แล้ว ?",
       "loginButton": "เข้าสู่ระบบ",
@@ -47,7 +50,13 @@
       },
       "displayNameTitle": "ชื่อ-นามสกุล",
       "phoneTitle": "เบอร์โทรศัพท์",
-      "phonePlaceholder": "กรอกเบอร์โทรศัพท์"
+      "phonePlaceholder": "กรอกเบอร์โทรศัพท์",
+      "birthdayTitle" : "วันเกิด",
+      "addressTitle" : "ที่อยู่",
+      "genderTitle" : "เพศ",
+      "male": "ชาย" ,
+      "female" : "หญิง",
+      "other": "LGBTQ"
     }
   },
   "product": {
