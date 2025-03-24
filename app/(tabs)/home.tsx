@@ -14,10 +14,12 @@ import { useTheme } from '@/providers/ThemeProvider'
 import { useRouter } from 'expo-router'
 import _ from 'lodash'
 import { LogBox } from 'react-native'
+import { Feather } from '@expo/vector-icons';
 
 // กำหนดประเภทของข้อมูลสินค้า
 type Product = {
   id: number
+  display_name: string
   title: string
   price: number
   description: string
@@ -27,7 +29,7 @@ type Product = {
   product_images?: {
     image_url: string
   }[]
-}
+};
 
 // ฟังก์ชันสำหรับจัดรูปแบบวันที่
 const formatDate = (dateString: string) => {
@@ -73,19 +75,26 @@ export default function Home() {
 
   // เพิ่ม state สำหรับเก็บ URL รูปโปรไฟล์
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState("")
 
   // เพิ่มฟังก์ชันดึงข้อมูลโปรไฟล์
   const fetchProfile = async () => {
     try {
       if (!session?.user?.id) return
-
+  
       const { data, error } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('display_name, avatar_url')
         .eq('id', session.user.id)
         .single()
-
+  
       if (error) throw error
+      
+      // เพิ่มบรรทัดนี้เพื่อตั้งค่า displayName
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+      }
+      
       if (data?.avatar_url) {
         setAvatarUrl(data.avatar_url)
       }
@@ -97,9 +106,9 @@ export default function Home() {
   // เรียกใช้ฟังก์ชันเมื่อ session เปลี่ยน
   useEffect(() => {
     if (session?.user) {
-      fetchProfile()
+      fetchProfile();
     }
-  }, [session])
+  }, [session]);
 
   // ฟังก์ชันค้นหาจาก Supabase
   const searchProducts = async (searchText: string) => {
@@ -324,7 +333,7 @@ export default function Home() {
                     ยินดีต้อนรับ
                   </Text>
                   <Text className="text-2xl text-white">
-                    {session?.user?.user_metadata?.displayName || 'บุคคลทั่วไป'}
+                    {displayName || 'บุคคลทั่วไป'}
                   </Text>
                 </View>
 
@@ -429,6 +438,28 @@ export default function Home() {
             ) : null
           )}
         />
+        <TouchableOpacity
+        style={{
+          position: 'absolute',
+          bottom: 25,
+          right: 25,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          backgroundColor: '#FFA7D1',
+          justifyContent: 'center',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 5,
+        }}
+        onPress={() => router.push('/addcostume')}
+      >
+        <Feather name="plus" size={24} color="#FFF" />
+      </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   )

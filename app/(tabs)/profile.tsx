@@ -1,4 +1,4 @@
-import { Image, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Switch, StyleSheet, View as RNView,} from "react-native";
+import { Image, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Switch, StyleSheet, View as RNView, Dimensions } from "react-native";
 import { View } from "@/components/Themed";
 import { FontAwesome, Feather, Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/providers/AuthProvider";
@@ -10,7 +10,29 @@ import { Text } from "@/components/CustomText";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+// เพิ่ม interface สำหรับข้อมูลชุด
+interface Costume {
+  id: string;
+  title: string;
+  price: number;
+  description: string | null;
+  status: string;
+  created_at: string;
+}
+
+// กำหนด interface สำหรับรูปภาพชุด
+interface CostumeImage {
+  id: string;
+  costume_id: string;
+  image_url: string;
+}
+
+// อินเตอร์เฟซสำหรับชุดที่มีรูปภาพด้วย
+interface CostumeWithImage extends Costume {
+  costume_images: CostumeImage[];
+}
 
 export default function Profile() {
   // State Management
@@ -18,6 +40,15 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const { t, i18n } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const [displayName, setDisplayName] = useState("");
+
+  // เพิ่ม state สำหรับเก็บข้อมูลชุด
+  const [costumes, setCostumes] = useState<CostumeWithImage[]>([]);
+  const [loadingCostumes, setLoadingCostumes] = useState(false);
+  
+  // คำนวณขนาดรูปภาพในกริด
+  const screenWidth = Dimensions.get('window').width;
+  const imageSize = (screenWidth - 50) / 3; // 3 คอลัมน์ padding 16x2 และ gap 2px
 
   // Alert Configuration
   const [alertConfig, setAlertConfig] = useState<{
@@ -47,22 +78,69 @@ export default function Profile() {
     address: string | null;
   }>();
 
+  // ฟังก์ชันดึงข้อมูลชุดของผู้ใช้
+  const fetchUserCostumes = async () => {
+    try {
+      if (!session?.user?.id) return;
+      setLoadingCostumes(true);
+
+      const { data, error } = await supabase
+        .from('costumes')
+        .select(`
+          *,
+          costume_images (
+            id,
+            image_url,
+            created_at
+          )
+        `)
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      console.log("ดึงข้อมูลชุดสำเร็จ:", data?.length || 0, "รายการ");
+      setCostumes(data || []);
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลชุด:", error);
+    } finally {
+      setLoadingCostumes(false);
+    }
+  };
+
   // Fetch Profile Data
   useFocusEffect(
     useCallback(() => {
       if (session?.user?.id) {
         console.log("Fetching profile on focus");
         fetchProfile();
+        fetchUserCostumes(); // เรียกใช้ฟังก์ชันดึงข้อมูลชุดเมื่อหน้าโปรไฟล์ได้รับโฟกัส
       }
     }, [session?.user?.id])
   );
-  
+
+  // ดึงชื่อผู้ใช้จาก metadata ของ session
+  useEffect(() => {
+    console.log("Session info:", {
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      userData: session?.user?.user_metadata,
+    });
+    
+    if (session?.user?.user_metadata?.display_name) {
+      setDisplayName(session.user.user_metadata.display_name);
+    } else if (session?.user?.email) {
+      setDisplayName(session.user.email);
+    }
+  }, [session]);
 
   const fetchProfile = async () => {
     try {
       if (!session?.user?.id) return;
 
       setLoading(true);
+      console.log("กำลังดึงข้อมูลโปรไฟล์สำหรับผู้ใช้:", session.user.id);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url, gender, birthday, phone, address")
@@ -72,6 +150,15 @@ export default function Profile() {
       if (error) throw error;
       console.log("Profile data from Supabase:", data);
       setProfile(data);
+      
+      // ตั้งค่า displayName จากข้อมูลโปรไฟล์
+      if (data?.display_name) {
+        console.log("ตั้งค่า display_name เป็น:", data.display_name);
+        setDisplayName(data.display_name);
+      } else if (session?.user?.email) {
+        console.log("ไม่พบ display_name ใช้อีเมลแทน:", session.user.email);
+        setDisplayName(session.user.email);
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
@@ -82,6 +169,19 @@ export default function Profile() {
   // Navigate to Edit Profile
   const navigateToEditProfile = () => {
     router.push("/editprofile");
+  };
+
+  // Navigate to Add Costume
+  const navigateToAddCostume = () => {
+    router.push("/addcostume");
+  };
+
+  // Navigate to Edit Costume
+  const navigateToEditCostume = (costumeId: string) => {
+    router.push({
+      pathname: "/editcostume",
+      params: { id: costumeId }
+    });
   };
 
   // ฟังก์ชันออกจากระบบ
@@ -338,7 +438,7 @@ export default function Profile() {
                   weight="bold"
                   style={{ color: theme === "dark" ? "#fff" : "#000" }}
                 >
-                  {profile?.display_name || t("profile.noName")}
+                  {displayName || profile?.display_name || t("profile.noName")}
                 </Text>
                 <Text
                   className="text-sm mb-2"
@@ -380,10 +480,10 @@ export default function Profile() {
                   weight="bold"
                   style={{ color: theme === "dark" ? "#FFA7D1" : "#FFA7D1" }}
                 >
-                  10
+                  {costumes.length}
                 </Text>
                 <Text className="text-xs mt-1" style={{ color: theme === "dark" ? "#ccc" : "#666" }}>
-                  เช่าชุด
+                  คอสตูม
                 </Text>
               </View>
               <View
@@ -439,6 +539,111 @@ export default function Profile() {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* คอสตูมของฉันส่วนคล้าย Instagram */}
+        <View 
+          className="mx-4 mt-6 p-4 rounded-xl"
+          style={{
+            backgroundColor: theme === "dark" ? "#1E1E2D" : "#FFF",
+            borderWidth: 1,
+            borderColor: theme === "dark" ? "#333" : "#FFE6F5",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: theme === "dark" ? 0.2 : 0.05,
+            shadowRadius: 5,
+            elevation: 2,
+          }}
+        >
+          <View className="flex-row justify-between items-center mb-4">
+            <Text
+              weight="bold"
+              style={{
+                color: theme === "dark" ? "#FFA7D1" : "#FFA7D1",
+                fontSize: 18,
+              }}
+            >
+              คอสตูมของฉัน
+            </Text>
+            <TouchableOpacity
+              onPress={navigateToAddCostume}
+              style={{
+                backgroundColor: theme === "dark" ? "#333" : "#FFE6F5",
+                borderRadius: 20,
+                padding: 8,
+              }}
+            >
+              <Ionicons name="add" size={18} color={theme === "dark" ? "#FFA7D1" : "#FFA7D1"} />
+            </TouchableOpacity>
+          </View>
+
+          {loadingCostumes ? (
+            <View className="py-8 items-center justify-center">
+              <ActivityIndicator color="#FFA7D1" size="large" />
+              <Text className="mt-2" style={{ color: theme === "dark" ? "#ccc" : "#666" }}>
+                กำลังโหลดข้อมูล...
+              </Text>
+            </View>
+          ) : costumes.length > 0 ? (
+            <View className="flex-row flex-wrap">
+              {costumes.map((costume) => (
+                <TouchableOpacity
+                  key={costume.id}
+                  style={{
+                    width: imageSize,
+                    height: imageSize,
+                    margin: 1,
+                  }}
+                  onPress={() => navigateToEditCostume(costume.id)}
+                >
+                  <Image
+                    source={{
+                      uri: costume.costume_images && costume.costume_images.length > 0
+                        ? costume.costume_images[0].image_url
+                        : "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg",
+                      cache: "reload",
+                    }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                    }}
+                    resizeMode="cover"
+                  />
+                  {costume.costume_images && costume.costume_images.length > 1 && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 5,
+                        right: 5,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        borderRadius: 10,
+                        width: 20,
+                        height: 20,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Ionicons name="copy-outline" size={12} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View className="py-8 items-center justify-center">
+              <Ionicons 
+                name="images-outline" 
+                size={50} 
+                color={theme === "dark" ? "#444" : "#FFE6F5"} 
+              />
+              <Text 
+                className="mt-2 text-center" 
+                style={{ color: theme === "dark" ? "#ccc" : "#666" }}
+              >
+               {t("settings.addyourcostume")} คุณยังไม่มีคอสตูม กดปุ่ม + เพื่อเพิ่มคอสตูมใหม่
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Settings Section */}

@@ -81,7 +81,7 @@ export default function TabLayout() {
         },
       }}
     >
-      //จัดเรียง tap bar
+      {/* จัดเรียง tab bar */}
       <Tabs.Screen
         name="home"
         options={{
