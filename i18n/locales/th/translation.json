@@ -260,10 +260,11 @@
   },
   "tabs": {
     "home": "หน้าหลัก",
-    "bookmark": "สินค้าของฉัน",
-    "create": "ลงประกาศ",
+    "reserve": "รายการจอง",
     "profile": "โปรไฟล์",
-    "settings": "ตั้งค่า"
+    "settings": "ตั้งค่า",
+     "search": "ค้นหา",
+    "favorite" :"รายการโปรด"
   },
   "landing": {
     "slogan": {

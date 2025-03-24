@@ -14,6 +14,9 @@ import play from "../assets/icons/play.png"
 import setting from "../assets/icons/setting.png"
 import flagth from "../assets/icons/thailand.png"
 import flagen from "../assets/icons/united-kingdom.png"
+import calender from "../assets/icons/calender.png"
+import bookheart from "../assets/icons/book-heart.png"
+
 
 export default {
   bookmark,
@@ -32,4 +35,6 @@ export default {
   setting,
   flagth,
   flagen,
+  calender,
+  bookheart
 }

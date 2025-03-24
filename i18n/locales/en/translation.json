@@ -260,10 +260,11 @@
   },
   "tabs": {
     "home": "Home",
-    "bookmark": "Products",
-    "create": "Post",
+    "reserve": "Reserve",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "search": "Search",
+    "favorite" :"Favorite"
   },
   "landing": {
     "slogan": {

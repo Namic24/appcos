@@ -1,3 +1,4 @@
+import { useTheme } from "@react-navigation/native"
 import { Stack } from "expo-router"
 import React from "react"
 import { useTranslation } from 'react-i18next'

@@ -129,9 +129,9 @@ export default function login() {
           >
             <View className="flex items-center">
               <Image
-                source={images.logo}
+                source={images.coslogo}
                 resizeMode="contain"
-                className="h-[34px]"
+                className="h-[150px]"
               />
             </View>
 
@@ -159,19 +159,22 @@ export default function login() {
             <CustomButton
               title={t("auth.login.button")}
               handlePress={submit}
-              containerStyles="mt-7"
-              textStyles="!text-white"
+              containerStyles="mt-7  bg-primary"
+              textStyles="!text-black"
               isLoading={isSubmitting}
             />
 
-            <View className="flex justify-center pt-5 flex-row gap-2">
-              <Text weight="regular" className="text-lg">
+            <View className="flex justify-center pt-5 flex-row gap-2 ">
+              <Text weight="regular" className="text-lg ">
                 {t("auth.login.noAccount")}
               </Text>
-              <Button
-                title={t("auth.login.registerButton")}
+              <Text
                 onPress={() => router.replace("/register")}
-              />
+                weight="medium"
+                className="text-primary"
+              >
+                {t("auth.login.registerButton")}
+              </Text>
             </View>
           </View>
         </ScrollView>

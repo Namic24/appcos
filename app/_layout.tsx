@@ -15,7 +15,7 @@ function RootLayoutNav() {
   useEffect(() => {
     async function updateNavigationBar() {
       try {
-        const navBarColor = theme === 'dark' ? '#161622' : '#ffffff';
+        const navBarColor = theme === 'dark' ? '#121212' : '#F7BBFF';
         await NavigationBar.setBackgroundColorAsync(navBarColor);
         // Set button style based on theme
         await NavigationBar.setButtonStyleAsync(theme === 'dark' ? 'light' : 'dark');
@@ -28,10 +28,10 @@ function RootLayoutNav() {
   }, [theme]);
 
   return(
-    <SafeAreaView className={`h-screen ${theme === 'dark' ? 'bg-primary' : 'bg-white'}`}>
+    <SafeAreaView className="h-full " style={{ backgroundColor: theme === 'dark' ? '#1E1E2D' : '#FFDBEC' }}>
       <StatusBar 
         barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
-        backgroundColor={theme === 'dark' ? '#161622' : 'white'}
+        backgroundColor={theme === 'dark' ? 'background' : 'white'}
         animated={true}
       />
       <Stack>
@@ -40,7 +40,8 @@ function RootLayoutNav() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="productdetail" options={{ headerShown: true }} />
         <Stack.Screen name="editproduct" options={{ headerShown: true }} />
-      </Stack>
+        <Stack.Screen name="editprofile" options={{  headerShown: false, presentation: 'modal'}} />
+    </Stack>
     </SafeAreaView>
   )
 }

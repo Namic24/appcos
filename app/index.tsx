@@ -55,20 +55,25 @@ export default function Index() {
 
   LogBox.ignoreAllLogs();
 
+
+const navigateToEditProfile = () => {
+  router.push("/editprofile");
+};
+
   return (
     <>
       {/* ถ้า login แล้ว redirect ไปหน้า home */}
       { isLoggedIn &&  <Redirect href="/(tabs)/home" /> }
       
       {/* ถ้ายังไม่ login แสดงหน้า Landing */}
-      { !isLoggedIn && <SafeAreaView className="h-full">
+      { !isLoggedIn && <SafeAreaView className="h-full bg-primary-200">
           <ScrollView contentContainerStyle={{height: '100%'}}>
             {/* ปุ่มเปลี่ยนภาษา */}
             <TouchableOpacity 
               onPress={toggleLanguage}
-              className="absolute top-4 right-4 z-10 bg-gray-700 p-2 rounded-full"
+              className="absolute top-4 right-4 z-10 bg-pink-500  p-2 rounded-full"
             >
-              <View className="flex-row items-center gap-2 !bg-transparent px-2">
+              <View className="flex-row items-center gap-2 !bg-transparent  px-2">
                 <Image
                   source={i18n.language === 'th' ? icons.flagen : icons.flagth}
                   className="w-6 h-6"
@@ -110,18 +115,27 @@ export default function Index() {
               </View>
 
               {/* คำอธิบาย */}
-              <Text weight="regular" className="text-md mt-7 text-center dark:text-white">
+              <Text weight="regular" className="text-md mt-7 text-center dark:text">
                 {t('landing.description')}
               </Text>
 
               {/* ปุ่มไปหน้า Login */}
+              <CustomButton 
+                title={t('auth.register.title')}
+                handlePress={() => { 
+                  router.push("/register");
+                }}  
+                containerStyles="w-full mt-7 bg-pink-400"
+                textStyles="!text-white"
+              />
+              {/* ปุ่มไปหน้า Login */}
               <CustomButton
-                title={t('landing.button')}
+                title={t('auth.login.title')}
                 handlePress={() => { 
                   router.push("/login");
                 }}  
-                containerStyles="w-full mt-7"
-                textStyles="!text-white"
+                containerStyles="w-full mt-7 bg-pink-400"
+                textStyles="!text-white "
               />
 
             </View>

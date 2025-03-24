@@ -6,6 +6,7 @@ import logo from "../assets/images/logo-white.png"
 import logoDark from "../assets/images/logo-dark.png"
 import logoSmall from "../assets/images/logo-small.png"
 import empty from "../assets/images/empty.png"
+import coslogo from "../assets/images/coslogo.png"
 
 export default { 
     profile, 
@@ -15,5 +16,6 @@ export default {
     logo,
     logoDark,
     logoSmall, 
-    empty 
+    empty, 
+    coslogo
 }
