@@ -179,7 +179,7 @@ export default function Profile() {
   // Navigate to Edit Costume
   const navigateToEditCostume = (costumeId: string) => {
     router.push({
-      pathname: "/editcostume",
+      pathname: "/productdetail",
       params: { id: costumeId }
     });
   };

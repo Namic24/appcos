@@ -17,7 +17,7 @@ import { LogBox } from 'react-native'
 import { Feather } from '@expo/vector-icons';
 
 // กำหนดประเภทของข้อมูลสินค้า
-type Product = {
+type Costumes = {
   id: number
   display_name: string
   title: string
@@ -26,7 +26,7 @@ type Product = {
   created_at: string
   hilight: boolean
   location: string
-  product_images?: {
+  costume_images?: {
     image_url: string
   }[]
 };
@@ -49,9 +49,10 @@ const formatDate = (dateString: string) => {
 
 export default function Home() {
   const { session } = useAuth() // สถานะของผู้ใช้
-  const [products, setProducts] = useState<Product[]>([]) // สินค้าทั้งหมด
-  const [hilightProducts, setHilightProducts] = useState<Product[]>([]) // สินค้าแนะนำ
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]) // สินค้าที่กรอง
+  const [products, setProducts] = useState<Costumes[]>([]) // สินค้าทั้งหมด
+  const [costumes, setCostumes] = useState<Costumes[]>([])
+  const [hilightProducts, setHilightProducts] = useState<Costumes[]>([]) // สินค้าแนะนำ
+  const [filteredProducts, setFilteredProducts] = useState<Costumes[]>([]) // สินค้าที่กรอง
   const [searchQuery, setSearchQuery] = useState("") // คำค้นหา
   const [refreshing, setRefreshing] = useState(false) // สถานะกำลังรีเฟรช
   const { theme } = useTheme() // สถานะของธีม
@@ -116,10 +117,10 @@ export default function Home() {
       setIsSearching(true)
       
       const { data, error, count } = await supabase
-        .from('products')
+        .from('costumes')
         .select(`
           *,
-          product_images (
+          costumes (
             image_url
           )
         `, { count: 'exact' })
@@ -163,10 +164,10 @@ export default function Home() {
   const fetchHilightProducts = async () => {
     try {
       const { data, error } = await supabase
-        .from('products')
+        .from('costumes')
         .select(`
           *,
-          product_images (
+          costume_images (
             image_url
           )
         `)
@@ -191,7 +192,7 @@ export default function Home() {
       })
       
       const { count } = await supabase
-        .from('products')
+        .from('costumes')
         .select('*', { count: 'exact', head: true })
 
       console.log('📊 จำนวนสินค้าทั้งหมด:', count)
@@ -205,10 +206,10 @@ export default function Home() {
       const to = from + ITEMS_PER_PAGE - 1
 
       const { data, error } = await supabase
-        .from('products')
+        .from('costumes')
         .select(`
           *,
-          product_images (
+          costume_images (
             image_url
           )
         `)
@@ -230,52 +231,56 @@ export default function Home() {
     }
   }
 
-  // ฟังก์ชันโหลดข้อมูลเพิ่มเติมเมื่อเลื่อนถึงจุดสิ้นสุดของรายการ
-  const loadMore = async () => {
-    // ถ้ากำลังโหลดอยู่หรือไม่มีข้อมูลเพิ่มเติม ให้หยุดการทำงาน
-    if (isLoadingMore || !hasMore) {
-      console.log('🚫 ไม่สามารถโหลดเพิ่มได้:', { 
-        isLoadingMore, 
-        hasMore,
-        currentPage: page 
-      })
-      return
-    }
+// แก้ไขส่วนที่เกี่ยวข้องกับการดึงข้อมูลชุด
+const fetchCostumes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('costumes') // สมมติว่ามีตาราง costumes แยกต่างหาก
+      .select(`
+        *,
+        costume_images (
+          image_url
+        )
+      `)
+      .order('created_at', { ascending: false })
 
-    console.log('📥 เริ่มโหลดข้อมูลเพิ่มเติม:', {
-      currentPage: page,
-      nextPage: page + 1
-    })
-
-    setIsLoadingMore(true)
-    await fetchProducts(page + 1)
-    setPage(prev => prev + 1)
-    setIsLoadingMore(false)
-
-    console.log('✅ โหลดข้อมูลเพิ่มเติมเสร็จสิ้น:', {
-      newPage: page + 1,
-      totalItems: products.length
-    })
+    if (error) throw error
+    setCostumes(data || [])
+  } catch (error) {
+    console.error("Error fetching costumes:", error)
   }
+}
 
-  // ฟังก์ชันรีเฟรชข้อมูลสินค้า
-  const onRefresh = async () => {
-    setRefreshing(true) // เปลี่ยนสถานะเป็นกำลังรีเฟรช
-    setPage(0) // รีเซ็ตหน้าเริ่มต้น
-    setHasMore(true) // รีเซ็ตสถานะว่ามีข้อมูลให้โหลดอีกหรือไม่
+// แก้ไขฟังก์ชัน onRefresh ให้รีเฟรชข้อมูลชุดด้วย
+const onRefresh = async () => {
+  setRefreshing(true)
+  setPage(0)
+  setHasMore(true)
+  await Promise.all([
+    fetchProducts(0),
+    fetchHilightProducts(),
+    fetchCostumes() // เพิ่มการเรียกดึงข้อมูลชุด
+  ])
+  setRefreshing(false)
+}
+
+// ลบการเรียกใช้ initializeProducts ซ้ำซ้อนและให้เหลือแค่การเรียกใช้ครั้งเดียว
+useEffect(() => {
+  const initializeProducts = async () => {
+    setRefreshing(true);
     await Promise.all([
-      fetchProducts(0), // ดึงข้อมูลสินค้าใหม่
-      fetchHilightProducts() // ดึงข้อมูลสินค้าแนะนำใหม่
-    ])
-    setRefreshing(false)
-  }
+      fetchProducts(0),
+      fetchHilightProducts(),
+      fetchCostumes()
+    ]);
+    setRefreshing(false);
+  };
 
-  useEffect(() => {
-    setFilteredProducts(products) // กำหนดค่าเริ่มต้นสำหรับสินค้าที่กรอง
-  }, [products])
+  initializeProducts();
+}, []);
 
   // ฟังก์ชันจัดการการกดสินค้าแนะนำ
-  const handleHorizontalCardPress = (product: Product) => {
+  const handleHorizontalCardPress = (product: Costumes) => {
     router.push({
       pathname: '/productdetail',
       params: {
@@ -283,7 +288,7 @@ export default function Home() {
         title: product.title,
         price: product.price,
         description: product.description,
-        image: product.product_images?.[0]?.image_url,
+        image: product.costume_images?.[0]?.image_url,
         created_at: product.created_at,
         location: product.location
       }
@@ -291,7 +296,7 @@ export default function Home() {
   }
 
   // ฟังก์ชันจัดการการกดสินค้า
-  const handleProductCardPress = (product: Product) => {
+  const handleProductCardPress = (product: Costumes) => {
     router.push({
       pathname: '/productdetail',
       params: {
@@ -299,7 +304,7 @@ export default function Home() {
         title: product.title,
         price: product.price,
         description: product.description,
-        image: product.product_images?.[0]?.image_url,
+        image: product.costume_images?.[0]?.image_url,
         created_at: product.created_at,
         location: product.location
       }
@@ -327,6 +332,7 @@ export default function Home() {
         <FlatList
           ListHeaderComponent={() => (
             <View className="flex py-6 space-y-6">
+              {/* ส่วนของชื่อผู้ใช้และรูปโปรไฟล์ */}
               <View className="flex justify-between items-start flex-row mb-6 px-4">
                 <View>
                   <Text className="font-pmedium text-md text-gray-100">
@@ -336,7 +342,6 @@ export default function Home() {
                     {displayName || 'บุคคลทั่วไป'}
                   </Text>
                 </View>
-
                 <View className="mt-1.5">
                   <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                     <Image
@@ -353,22 +358,24 @@ export default function Home() {
                   </TouchableOpacity>
                 </View>
               </View>
-
+  
+              {/* ส่วนของการค้นหา */}
               <SearchInput 
                 initialQuery={searchQuery} 
                 onChangeText={handleSearch}
                 placeholder="ค้นหาสินค้า..."
               />
-
+  
               {isSearching && (
                 <View className="py-2 items-center">
                   <ActivityIndicator size="small" color="#0284c7" />
                   <Text className="text-gray-500 mt-1">กำลังค้นหา...</Text>
                 </View>
               )}
-
+  
               {!searchQuery.trim() && (
                 <>
+                  {/* ส่วนแสดงสินค้าแนะนำ */}
                   <View className="w-full flex-1 pt-5 px-4">
                     <Text className="text-lg font-pregular text-gray-100">
                       สินค้าแนะนำ
@@ -380,7 +387,7 @@ export default function Home() {
                     keyExtractor={(item) => `hilight_${item.id}`}
                     renderItem={({ item }) => (
                       <HorizontalCard
-                        image={item.product_images?.[0]?.image_url || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
+                        image={item.costume_images?.[0]?.image_url || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
                         title={item.title}
                         onPress={() => handleHorizontalCardPress(item)}
                       />
@@ -395,10 +402,39 @@ export default function Home() {
                       </View>
                     )}
                   />
+  
+                  {/* ส่วนแสดงชุดสำหรับเช่า */}
+                  <View className="w-full flex-1 pt-5 px-4 mt-4">
+                    <Text className="text-lg font-pregular text-gray-100">
+                      ชุดสำหรับเช่า
+                    </Text>
+                  </View>
+                  <FlatList
+                    horizontal
+                    data={costumes}
+                    keyExtractor={(item) => `costume_${item.id}`}
+                    renderItem={({ item }) => (
+                      <HorizontalCard
+                        image={item.costume_images?.[0]?.image_url || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
+                        title={item.title}
+                        onPress={() => handleHorizontalCardPress(item)}
+                      />
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                    className="mt-4"
+                    ListEmptyComponent={() => (
+                      <View className="px-4">
+                        <Text className="text-gray-500">
+                          ไม่พบชุดสำหรับเช่า
+                        </Text>
+                      </View>
+                    )}
+                  />
                 </>
               )}
             </View>
           )}
+          /* ส่วนที่เหลือของโค้ด FlatList */
           ItemSeparatorComponent={() => (
             <View 
               className={`h-[1px] mx-8 ${
@@ -412,7 +448,7 @@ export default function Home() {
             <ProductCard
               productname={item.title}
               productprice={`฿${item.price.toLocaleString()}`}
-              productimage={item.product_images?.[0]?.image_url || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
+              productimage={item.costume_images?.[0]?.image_url || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
               postDate={formatDate(item.created_at)}
               description={item.description}
               onPress={() => handleProductCardPress(item)}
@@ -425,8 +461,8 @@ export default function Home() {
               </Text>
             </View>
           )}
-          onEndReached={loadMore} // เรียกใช้ฟังก์ชันเพื่อโหลดข้อมูลเพิ่มเมื่อเลื่อนถึงจุดสิ้นสุดของรายการ
-          onEndReachedThreshold={0.5} // ระยะที่จะเริ่มโหลดข้อมูลเพิ่มเมื่อเลื่อนถึงจุดสิ้นสุดของรายการ
+          
+          onEndReachedThreshold={0.5}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -439,28 +475,27 @@ export default function Home() {
           )}
         />
         <TouchableOpacity
-        style={{
-          position: 'absolute',
-          bottom: 25,
-          right: 25,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#FFA7D1',
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-        onPress={() => router.push('/addcostume')}
-      >
-        <Feather name="plus" size={24} color="#FFF" />
-      </TouchableOpacity>
-
+          style={{
+            position: 'absolute',
+            bottom: 25,
+            right: 25,
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            backgroundColor: '#FFA7D1',
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+          onPress={() => router.push('/addcostume')}
+        >
+          <Feather name="plus" size={24} color="#FFF" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
-  )
+  );
 }

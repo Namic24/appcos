@@ -394,13 +394,13 @@ export default function EditCostume() {
         // 1.2 ลบไฟล์จาก storage
         for (const image of imagesToRemove || []) {
           // ดึงเฉพาะส่วนพาธของไฟล์จาก URL
-          const filePathMatch = image.image_url.match(/costumes\/([^?]+)/);
+          const filePathMatch = image.image_url.match(/costume-images\/([^?]+)/);
           if (filePathMatch && filePathMatch[1]) {
             const filePath = filePathMatch[1];
             console.log("กำลังลบไฟล์:", filePath);
             
             const { error: removeError } = await supabase.storage
-              .from("costumes")
+              .from("costume-images")
               .remove([filePath]);
               
             if (removeError) {
@@ -441,7 +441,7 @@ export default function EditCostume() {
             : image.base64;
             
           const { error: uploadError, data: uploadData } = await supabase.storage
-            .from("costumes")
+            .from("costume-images")
             .upload(fileName, decode(base64Data), {
               contentType: "image/jpeg",
               upsert: true,
@@ -454,7 +454,7 @@ export default function EditCostume() {
 
           // 2.3 ดึง URL สาธารณะของรูปภาพ
           const { data: publicUrlData } = supabase.storage
-            .from("costumes")
+            .from("costume-images")
             .getPublicUrl(fileName);
 
           if (!publicUrlData || !publicUrlData.publicUrl) {

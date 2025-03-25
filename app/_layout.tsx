@@ -38,8 +38,8 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name='(auth)' options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="productdetail" options={{ headerShown: true }} />
-        <Stack.Screen name="editcostume" options={{ headerShown: true }} />
+        <Stack.Screen name="productdetail" options={{ headerShown:false }} />
+        <Stack.Screen name="editcostume" options={{ headerShown: false }} />
         <Stack.Screen name="addcostume" options={{ headerShown: false }} />
         <Stack.Screen name="editprofile" options={{ headerShown: false, presentation: 'modal'}} />
       </Stack>
