@@ -41,8 +41,7 @@ interface Costume {
   additional_notes: string | null;
   created_at: string;
   updated_at: string;
-  name_th: string | null;
-  name_en: string | null;
+  
 }
 
 // กำหนด interface สำหรับรูปภาพชุด
@@ -79,8 +78,6 @@ export default function EditCostume() {
     additional_notes: "",
     created_at: "",
     updated_at: "",
-    name_th: "",
-    name_en: ""
   });
   
   const [costumeImages, setCostumeImages] = useState<CostumeImage[]>([]);
@@ -503,7 +500,7 @@ export default function EditCostume() {
       }
 
       // ตรวจสอบข้อมูลสำคัญต่อไป...
-      if (!costume?.name_th?.trim()) {
+      if (!costume?.title?.trim()) {
         showAlert("common.error", "costume.validation.nameRequired");
         setLoading(false);
         return;
@@ -523,7 +520,7 @@ export default function EditCostume() {
       // อัปเดตข้อมูลชุด
       const costumeData = {
         user_id: session.user.id,
-        title: costume.name_th, 
+        title: costume.title, 
         price: costume.price,
         test_price: costume.test_price,
         deposit_amount: costume.deposit_amount,
@@ -535,8 +532,7 @@ export default function EditCostume() {
         additional_notes: costume.additional_notes,
         status: 'active',
         updated_at: new Date().toISOString(),
-        name_th: costume.name_th,
-        name_en: costume.name_en
+     
       };
       
       console.log("กำลังอัปเดตชุด ID:", costumeId);
@@ -819,9 +815,9 @@ export default function EditCostume() {
                   ชื่อชุด (ภาษาไทย) *
                 </Text>
                 <TextInput
-                  value={costume?.name_th || ""}
+                  value={costume?.title || ""}
                   onChangeText={(text) => {
-                    setCostume(prev => ({ ...prev!, name_th: text }));
+                    setCostume(prev => ({ ...prev!, title: text }));
                     setHasUnsavedChanges(true);
                   }}
                   style={{

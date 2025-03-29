@@ -4,144 +4,221 @@
 // - แสดงหน้า Landing
 // - รองรับการเปลี่ยนภาษาและ theme
 
-import { Redirect } from 'expo-router'
-import React, { useEffect, useState } from 'react'
-import CustomButton from '@/components/CustomButton'
-import { ScrollView, Image, TouchableOpacity, LogBox, SafeAreaView } from 'react-native'
-import { View } from "@/components/Themed"
-import { images } from "@/constants"
-import { router } from 'expo-router'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useTranslation } from 'react-i18next'
-import { icons } from '@/constants'
-import { Text } from "@/components/CustomText"
+import { Redirect } from "expo-router";
+import React, { useEffect, useState } from "react";
+import CustomButton from "@/components/CustomButton";
+import {
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  LogBox,
+  SafeAreaView,
+  ImageBackground,
+  Dimensions,
+} from "react-native";
+import { View } from "@/components/Themed";
+import { images } from "@/constants";
+import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
+import { icons } from "@/constants";
+import { Text } from "@/components/CustomText";
+import { StatusBar } from "expo-status-bar";
+import { useTheme } from "@/providers/ThemeProvider";
 
 export default function Index() {
   // Hooks สำหรับ theme และการแปลภาษา
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation();
+  const { theme } = useTheme(); // เพิ่ม theme จาก useTheme
 
   // State สำหรับเก็บสถานะ login และการโหลดข้อมูล
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  const screenHeight = Dimensions.get("window").height;
 
   // ตรวจสอบสถานะ login จาก AsyncStorage เมื่อเปิดแอพ
   useEffect(() => {
     const initialize = async () => {
       try {
-        const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-        console.log('isLoggedIn:', isLoggedIn);
-        if (isLoggedIn === 'true') {
+        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+        console.log("isLoggedIn:", isLoggedIn);
+        if (isLoggedIn === "true") {
           setIsLoggedIn(true);
         }
       } catch (error) {
-        console.error('Failed to check login status:', error);
+        console.error("Failed to check login status:", error);
       } finally {
         setIsInitialized(true);
       }
     };
 
-    initialize()
-  }, [])
+    initialize();
+  }, []);
 
   // รอจนกว่าจะโหลดข้อมูลเสร็จ
-  if (!isInitialized) return null
+  if (!isInitialized) return null;
 
   // ฟังก์ชันสลับภาษา
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'th' ? 'en' : 'th'
-    AsyncStorage.setItem('language', newLang)
-    i18n.changeLanguage(newLang)
-  }
+    const newLang = i18n.language === "th" ? "en" : "th";
+    AsyncStorage.setItem("language", newLang);
+    i18n.changeLanguage(newLang);
+  };
 
   LogBox.ignoreAllLogs();
 
-
-const navigateToEditProfile = () => {
-  router.push("/editprofile");
-};
-
   return (
-    <>
+    <ImageBackground
+      source={{
+        uri: "https://i.pinimg.com/736x/2e/fe/69/2efe69fb43e839e7371ac87eb0f5885e.jpg",
+      }}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
       {/* ถ้า login แล้ว redirect ไปหน้า home */}
-      { isLoggedIn &&  <Redirect href="/(tabs)/home" /> }
-      
+      {isLoggedIn && <Redirect href="/(tabs)/home" />}
+
       {/* ถ้ายังไม่ login แสดงหน้า Landing */}
-      { !isLoggedIn && <SafeAreaView className="h-full bg-primary-200">
-          <ScrollView contentContainerStyle={{height: '100%'}}>
-            {/* ปุ่มเปลี่ยนภาษา */}
-            <TouchableOpacity 
+      {!isLoggedIn && (
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+        >
+          <StatusBar style="light" />
+
+          <View
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              zIndex: 10,
+              backgroundColor: "transparent",
+            }}
+          >
+            <TouchableOpacity
               onPress={toggleLanguage}
-              className="absolute top-4 right-4 z-10 bg-pink-500  p-2 rounded-full"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                padding: 8,
+                borderRadius: 9999,
+                borderWidth: 1,
+                borderColor: "rgba(255, 255, 255, 0.3)",
+              }}
             >
-              <View className="flex-row items-center gap-2 !bg-transparent  px-2">
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: "transparent",
+                }}
+              >
                 <Image
-                  source={i18n.language === 'th' ? icons.flagen : icons.flagth}
-                  className="w-6 h-6"
+                  source={i18n.language === "th" ? icons.flagen : icons.flagth}
+                  style={{ width: 20, height: 20 }}
                   resizeMode="contain"
                 />
-                <Text className="!text-white text-sm">
-                  {i18n.language === 'th' ? 'EN' : 'ไทย'}
+                <Text
+                  style={{ color: "white", fontSize: 14, fontWeight: "500" }}
+                >
+                  {i18n.language === "th" ? "EN" : "ไทย"}
                 </Text>
               </View>
             </TouchableOpacity>
+          </View>
 
-            <View className="w-full flex justify-center items-center h-full px-8">
-              {/* Logo */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "space-between",
+              paddingHorizontal: 32,
+              backgroundColor: "transparent",
+              paddingTop: screenHeight * 0.1,
+              paddingBottom: screenHeight * 0.08,
+            }}
+          >
+            {/* Top Section */}
+            <View
+              style={{
+                alignItems: "center",
+                backgroundColor: "transparent",
+              }}
+            >
               <Image
-                source={images.logo}
-                className="h-[84px]"
+                source={images.coslogo}
+                style={{ height: 120, marginBottom: 16 }}
                 resizeMode="contain"
               />
 
-              {/* รูปภาพประกอบ */}
-              <Image
-                source={images.cards}
-                className="max-w-[380px] w-full h-[298px]"
-                resizeMode="contain"
-              />
-
-              {/* Slogan */}
-              <View className="relative mt-5">
-                <Text weight="bold" className="text-3xl text-center dark:text-white leading-10">
-                  {t('landing.slogan.line1')}{"\n"}
-                  {t('landing.slogan.line2')}{" "}
-                  <Text weight="bold" className="text-secondary-200">AuraShop</Text>
-                </Text>
-                <Image
-                  source={images.path}
-                  className="w-[120px] h-[15px] absolute -bottom-4 -right-8"
-                  resizeMode="contain"
-                />
-              </View>
-
-              {/* คำอธิบาย */}
-              <Text weight="regular" className="text-md mt-7 text-center dark:text">
-                {t('landing.description')}
+              <Text
+                weight="bold"
+                style={{
+                  fontSize: 32,
+                  textAlign: "center",
+                  color: "white",
+                  marginTop: 16,
+                }}
+              >
+                COSPLAYING
               </Text>
 
-              {/* ปุ่มไปหน้า Login */}
-              <CustomButton 
-                title={t('auth.register.title')}
-                handlePress={() => { 
-                  router.push("/register");
-                }}  
-                containerStyles="w-full mt-7 bg-pink-400"
-                textStyles="!text-white"
-              />
-              {/* ปุ่มไปหน้า Login */}
+              <Text
+                weight="regular"
+                style={{
+                  fontSize: 16,
+                  textAlign: "center",
+                  color: "rgba(255, 255, 255, 0.8)",
+                  marginTop: 8,
+                }}
+              >
+                ร้านเช่าชุดคอสเพลย์
+              </Text>
+            </View>
+
+            {/* Bottom Section */}
+            <View style={{ backgroundColor: "transparent" }}>
+              <Text
+                weight="medium"
+                style={{
+                  fontSize: 18,
+                  textAlign: "center",
+                  color: "white",
+                  marginBottom: 24,
+                }}
+              >
+                สัมผัสประสบการณ์เช่าชุดคอสเพลย์ที่ดีที่สุด
+              </Text>
+
               <CustomButton
-                title={t('auth.login.title')}
-                handlePress={() => { 
-                  router.push("/login");
-                }}  
-                containerStyles="w-full mt-7 bg-pink-400"
-                textStyles="!text-white "
+                title="เริ่มต้นใช้งาน"
+                handlePress={() => {
+                  router.push("/register");
+                }}
+                containerStyles="w-full bg-white rounded-3xl py-4 mb-4"
+                textStyles="text-[#222] font-semibold"
               />
 
+              <TouchableOpacity
+                onPress={() => router.push("/login")}
+                style={{ backgroundColor: "transparent" }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                    textAlign: "center",
+                    textDecorationLine: "underline",
+                    fontWeight: "500",
+                    marginTop: 8,
+                  }}
+                >
+                  ฉันมีบัญชีอยู่แล้ว
+                </Text>
+              </TouchableOpacity>
             </View>
-          </ScrollView>
-        </SafeAreaView> 
-      }
-    </>
-  )
+          </View>
+        </SafeAreaView>
+      )}
+    </ImageBackground>
+  );
 }

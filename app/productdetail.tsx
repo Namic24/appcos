@@ -23,29 +23,31 @@ import { useAuth } from "@/providers/AuthProvider";
 // ความกว้างของหน้าจอสำหรับรูปภาพ
 const { width } = Dimensions.get("window");
 
-// ประเภทข้อมูลสำหรับชุดคอสเพลย์
+// ประเภทข้อมูลสำหรับชุดคอสเพลย์ - ปรับให้สอดคล้องกับ addcostume.tsx
 type CostumeDetail = {
-  id: number;
+  id: string | number;
+  user_id: string;
   title: string;
   price: number;
-  rent_price_per_day?: number;
+  test_price?: number | null;
   deposit_amount?: number;
-  description: string;
-  size?: string;
-  condition?: string;
-  category?: string;
-  character_name?: string;
-  series_name?: string;
-  include_items?: string[];
+  description?: string | null;
+  available_sizes?: string[];
+  size_measurements?: string | null;
+  available_slots?: number;
+  rent_duration?: string | null;
+  location?: string | null;
+  status?: string;
+  additional_notes?: string | null;
   created_at: string;
-  location: string;
-  created_by?: string; // เพิ่ม created_by เพื่อเก็บ ID ของผู้สร้าง
-  owner_id?: string;
-  owner_display_name?: string;
-  owner_avatar_url?: string;
+  updated_at?: string;
+  name_th?: string | null;
+  name_en?: string | null;
   costume_images?: {
-    id: number;
+    id: string | number;
+    costume_id?: string | number;
     image_url: string;
+    created_at?: string;
   }[];
 };
 
@@ -59,7 +61,10 @@ export default function productdetail() {
   const [costume, setCostume] = useState<CostumeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isOwner, setIsOwner] = useState(false); // เพิ่ม state เพื่อตรวจสอบว่าเป็นเจ้าของหรือไม่
+  const [isOwner, setIsOwner] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   // ฟังก์ชันสำหรับจัดรูปแบบวันที่
   const formatDate = (dateString: string) => {
@@ -96,20 +101,24 @@ export default function productdetail() {
   
       if (error) throw error;
   
-      // ต้องปรับให้เข้ากับโครงสร้างข้อมูลของคุณ
+      // ปรับข้อมูลให้เข้ากับโครงสร้าง CostumeDetail
       if (data) {
+        // สร้างข้อมูลชุดคอสเพลย์จากข้อมูลที่ได้จาก DB
         setCostume({
           ...data,
+          // ใช้ name_th เป็น title ถ้า title ไม่มี
+          title: data.title || data.name_th || "ไม่มีชื่อ",
+          // ใช้ additional_notes เป็น description ถ้าไม่มี description
+          description: data.description || data.additional_notes || "",
         });
   
         console.log("Current user ID:", session?.user?.id);
-        console.log("Data user ID:", data.user_id || data.created_by || data.owner_id);
+        console.log("Data user ID:", data.user_id);
   
         // ตรวจสอบว่าผู้ใช้ปัจจุบันเป็นเจ้าของชุดหรือไม่
-        // ปรับตามโครงสร้างข้อมูลของคุณ
         if (session?.user?.id) {
           const currentUserId = session.user.id;
-          const costumeOwnerId = data.user_id || data.created_by || data.owner_id;
+          const costumeOwnerId = data.user_id;
           
           if (currentUserId && costumeOwnerId && String(currentUserId) === String(costumeOwnerId)) {
             console.log("Owner match found!");
@@ -128,6 +137,100 @@ export default function productdetail() {
       setIsOwner(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ฟังก์ชันตรวจสอบว่าชุดนี้อยู่ในรายการโปรดหรือไม่
+  const checkIsFavorite = async () => {
+    if (!session?.user?.id || !costumeId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("costume_bookmarks")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("costume_id", costumeId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setIsFavorite(true);
+        setBookmarkId(data.id);
+      } else {
+        setIsFavorite(false);
+        setBookmarkId(null);
+      }
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+    }
+  };
+
+  // ฟังก์ชันเพิ่ม/ลบรายการโปรด
+  const toggleFavorite = async () => {
+    if (!session?.user?.id) {
+      Alert.alert("โปรดเข้าสู่ระบบ", "คุณต้องเข้าสู่ระบบก่อนเพิ่มรายการโปรด");
+      return;
+    }
+  
+    const parsedCostumeId = costumeId ? String(costumeId) : null;
+    
+    if (!parsedCostumeId) {
+      Alert.alert("เกิดข้อผิดพลาด", "ไม่พบข้อมูลชุดคอสเพลย์");
+      return;
+    }
+  
+    setFavoriteLoading(true);
+    try {
+      // ตรวจสอบว่ามีบุ๊กมาร์คอยู่แล้วหรือไม่
+      const { data: existingBookmark, error: checkError } = await supabase
+        .from("costume_bookmarks")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("costume_id", parsedCostumeId)
+        .single();
+  
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+  
+      if (existingBookmark) {
+        // ถ้ามีบุ๊กมาร์คอยู่แล้ว ให้ลบออก
+        const { error: deleteError } = await supabase
+          .from("costume_bookmarks")
+          .delete()
+          .eq("id", existingBookmark.id);
+  
+        if (deleteError) throw deleteError;
+  
+        setIsFavorite(false);
+        setBookmarkId(null);
+        Alert.alert("สำเร็จ", "ลบออกจากรายการโปรดแล้ว");
+      } else {
+        // ถ้ายังไม่มีบุ๊กมาร์ค ให้เพิ่มใหม่
+        const { data, error } = await supabase.rpc('insert_costume_bookmark', {
+          p_user_id: session.user.id,
+          p_costume_id: parsedCostumeId
+        });
+  
+        if (error) {
+          console.error('Bookmark Insertion Error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details
+          });
+          throw error;
+        }
+  
+        setIsFavorite(true);
+        setBookmarkId(data);
+        Alert.alert("สำเร็จ", "เพิ่มเข้ารายการโปรดแล้ว");
+      }
+    } catch (error) {
+      console.error("Favorite Toggle Error:", JSON.stringify(error, null, 2));
+      Alert.alert("เกิดข้อผิดพลาด" );
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -161,7 +264,7 @@ export default function productdetail() {
 
               // ลบชุด
               const { error } = await supabase
-                .from("costumes") // ปรับเป็นชื่อตารางที่ถูกต้อง
+                .from("costumes")
                 .delete()
                 .eq("id", costumeId);
 
@@ -189,7 +292,9 @@ export default function productdetail() {
   useEffect(() => {
     if (costumeId) {
       fetchCostumeDetail();
-      
+      if (session?.user?.id) {
+        checkIsFavorite();
+      }
     }
   }, [costumeId, session]);
  
@@ -259,7 +364,7 @@ export default function productdetail() {
               <Feather name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
-            {isOwner && (
+            {isOwner ? (
               <View className="flex-row">
                 <TouchableOpacity
                   className="w-10 h-10 rounded-full bg-black/30 justify-center items-center mr-2"
@@ -274,6 +379,22 @@ export default function productdetail() {
                   <MaterialIcons name="delete" size={22} color="white" />
                 </TouchableOpacity>
               </View>
+            ) : (
+              <TouchableOpacity
+                className="w-10 h-10 rounded-full bg-black/30 justify-center items-center"
+                onPress={toggleFavorite}
+                disabled={favoriteLoading}
+              >
+                {favoriteLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <MaterialIcons
+                    name={isFavorite ? "favorite" : "favorite-border"}
+                    size={24}
+                    color={isFavorite ? "#FFA7D1" : "white"}
+                  />
+                )}
+              </TouchableOpacity>
             )}
           </View>
 
@@ -306,13 +427,7 @@ export default function productdetail() {
         <View className="p-4">
           <View className="flex-row justify-between items-center">
             <Text className="text-2xl font-bold text-gray-800 dark:text-white">
-              {costume.title}
-            </Text>
-            <Text className="text-xl font-bold text-pink-500">
-              ฿
-              {costume.rent_price_per_day?.toLocaleString() ||
-                costume.price?.toLocaleString()}{" "}
-              / วัน
+              {costume.title || costume.name_th || "ไม่มีชื่อ"}
             </Text>
           </View>
 
@@ -326,32 +441,40 @@ export default function productdetail() {
             </Text>
           </View>
 
-          {/* รายละเอียดตัวละคร (ถ้ามี) */}
-          {(costume.character_name || costume.series_name) && (
-            <View className="mt-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-              <Text className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-                รายละเอียดตัวละคร
+          {/* ราคาและเงินมัดจำ */}
+          <View className="mt-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+            <Text className="text-lg font-bold text-gray-800 dark:text-white mb-2">
+              ราคาและเงินมัดจำ
+            </Text>
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-gray-700 dark:text-gray-300">
+                ราคาเทส:
               </Text>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-gray-700 dark:text-gray-300">
-                  ตัวละคร:
-                </Text>
-                <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                  {costume.character_name || "ไม่ระบุ"}
-                </Text>
-              </View>
+              <Text className="text-gray-700 dark:text-gray-300 font-medium">
+                ฿{costume.price?.toLocaleString() || "0"}
+              </Text>
+            </View>
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-gray-700 dark:text-gray-300">
+                ราคาไพรเวท:
+              </Text>
+              <Text className="text-gray-700 dark:text-gray-300 font-medium">
+                ฿{costume.test_price?.toLocaleString() || "0"}
+              </Text>
+            </View>
+            {costume.deposit_amount !== undefined && (
               <View className="flex-row justify-between">
                 <Text className="text-gray-700 dark:text-gray-300">
-                  ซีรีส์:
+                  เงินมัดจำ:
                 </Text>
                 <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                  {costume.series_name || "ไม่ระบุ"}
+                  ฿{costume.deposit_amount?.toLocaleString() || "0"}
                 </Text>
               </View>
-            </View>
-          )}
+            )}
+          </View>
 
-          {/* รายละเอียดชุด */}
+          {/* ไซส์และระยะเวลาเช่า */}
           <View className="mt-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
             <Text className="text-lg font-bold text-gray-800 dark:text-white mb-2">
               รายละเอียดชุด
@@ -359,65 +482,40 @@ export default function productdetail() {
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-700 dark:text-gray-300">ไซส์:</Text>
               <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                {costume.size || "ไม่ระบุ"}
+                {costume.available_sizes && costume.available_sizes.length > 0
+                  ? costume.available_sizes.join(", ")
+                  : "ไม่ระบุ"}
               </Text>
             </View>
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-gray-700 dark:text-gray-300">สภาพ:</Text>
-              <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                {costume.condition || "ไม่ระบุ"}
-              </Text>
-            </View>
+            {costume.size_measurements && (
+              <View className="mb-2">
+                <Text className="text-gray-700 dark:text-gray-300">รายละเอียดไซส์:</Text>
+                <Text className="text-gray-700 dark:text-gray-300 mt-1">
+                  {costume.size_measurements}
+                </Text>
+              </View>
+            )}
             <View className="flex-row justify-between">
-              <Text className="text-gray-700 dark:text-gray-300">ประเภท:</Text>
+              <Text className="text-gray-700 dark:text-gray-300">ระยะเวลาเช่า:</Text>
               <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                {costume.category || "ไม่ระบุ"}
+                {costume.rent_duration || "ไม่ระบุ"}
               </Text>
             </View>
           </View>
 
-          {/* อุปกรณ์ที่รวมอยู่ในชุด (ถ้ามี) */}
-          {costume.include_items && costume.include_items.length > 0 && (
-            <View className="mt-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-              <Text className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-                อุปกรณ์ที่รวมอยู่ในชุด
-              </Text>
-              {costume.include_items.map((item, index) => (
-                <View key={index} className="flex-row items-center mb-2">
-                  <FontAwesome name="check" size={16} color="#10B981" />
-                  <Text className="ml-2 text-gray-700 dark:text-gray-300">
-                    {item}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* ราคาเงินมัดจำ */}
+          {/* จำนวนคิว */}
           <View className="mt-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
             <Text className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-              ราคาและเงินมัดจำ
+              ข้อมูลการจอง
             </Text>
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-700 dark:text-gray-300">
-                ค่าเช่าต่อวัน:
+                จำนวนคิวที่รับได้:
               </Text>
               <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                ฿
-                {costume.rent_price_per_day?.toLocaleString() ||
-                  costume.price?.toLocaleString()}
+                {costume.available_slots || "1"}
               </Text>
             </View>
-            {costume.deposit_amount && (
-              <View className="flex-row justify-between">
-                <Text className="text-gray-700 dark:text-gray-300">
-                  เงินมัดจำ:
-                </Text>
-                <Text className="text-gray-700 dark:text-gray-300 font-medium">
-                  ฿{costume.deposit_amount.toLocaleString()}
-                </Text>
-              </View>
-            )}
           </View>
 
           {/* รายละเอียดเพิ่มเติม */}
@@ -426,7 +524,7 @@ export default function productdetail() {
               รายละเอียดเพิ่มเติม
             </Text>
             <Text className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              {costume.description || "ไม่มีรายละเอียดเพิ่มเติม"}
+              {costume.additional_notes || "ไม่มีรายละเอียดเพิ่มเติม"}
             </Text>
           </View>
         </View>
@@ -435,15 +533,37 @@ export default function productdetail() {
       {/* ปุ่มเช่าชุด (แสดงเฉพาะเมื่อไม่ใช่เจ้าของ) */}
       {!isOwner && (
         <View className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <TouchableOpacity
-            className="w-full py-3 bg-pink-500 rounded-full flex-row justify-center items-center"
-            onPress={() => router.push("/+not-found")}
-          >
-            <Text className="text-white font-bold text-lg mr-2">
-              เช่าชุดนี้
-            </Text>
-            <Feather name="arrow-right" size={20} color="white" />
-          </TouchableOpacity>
+          <View className="flex-row space-x-3">
+            <TouchableOpacity
+              className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 rounded-full flex-row justify-center items-center"
+              onPress={toggleFavorite}
+              disabled={favoriteLoading}
+            >
+              {favoriteLoading ? (
+                <ActivityIndicator size="small" color={theme === "dark" ? "white" : "black"} />
+              ) : (
+                <>
+                  <MaterialIcons
+                    name={isFavorite ? "favorite" : "favorite-border"}
+                    size={20}
+                    color={isFavorite ? "#FFA7D1" : theme === "dark" ? "white" : "black"}
+                  />
+                  <Text className={`ml-2 font-bold ${isFavorite ? "text-pink-500" : "text-gray-800 dark:text-white"}`}>
+                    {isFavorite ? "เก็บแล้ว" : "เก็บไว้"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 py-3 bg-pink-500 rounded-full flex-row justify-center items-center"
+              onPress={() => router.push("/+not-found")}
+            >
+              <Text className="text-white font-bold text-lg mr-2">
+                เช่าชุดนี้
+              </Text>
+              <Feather name="arrow-right" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 

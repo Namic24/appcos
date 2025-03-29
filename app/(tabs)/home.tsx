@@ -273,6 +273,7 @@ useEffect(() => {
       fetchHilightProducts(),
       fetchCostumes()
     ]);
+    setFilteredProducts(products);
     setRefreshing(false);
   };
 

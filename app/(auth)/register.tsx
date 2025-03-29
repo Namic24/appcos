@@ -185,7 +185,7 @@ export default function register() {
               title={t("auth.register.button")}
               handlePress={handleRegister}
               containerStyles="mt-7 bg-primary"
-              textStyles="!text-black"
+              textStyles="text-black"
             />
 
             <View className="flex justify-center pt-5 flex-row gap-2  text-pink-600">

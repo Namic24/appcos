@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
-import {ScrollView,TextInput,TouchableOpacity,Image,ActivityIndicator,SafeAreaView,BackHandler,Alert,KeyboardAvoidingView,View,Platform,} from "react-native";
+import {
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  SafeAreaView,
+  BackHandler,
+  Alert,
+  KeyboardAvoidingView,
+  View,
+  Platform,
+} from "react-native";
 import { Stack, useLocalSearchParams, router } from "expo-router";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/providers/AuthProvider";
@@ -41,6 +53,14 @@ interface CostumeImage {
   created_at: string;
 }
 
+// ประเภทข้อมูลสำหรับรูปภาพที่อัปโหลด
+interface UploadImage {
+  uri: string;
+  base64?: string;
+  type?: string;
+  fileName?: string;
+}
+
 export default function CostumeForm() {
   // 1. Setup & State
   const params = useLocalSearchParams();
@@ -76,10 +96,8 @@ export default function CostumeForm() {
   const [loading, setLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // สถานะการจัดการรูปภาพ
-  const [uploadedImages, setUploadedImages] = useState<
-    { base64: string; uri: string }[]
-  >([]);
+  // สถานะการจัดการรูปภาพ - แก้ไขประเภทข้อมูล
+  const [uploadedImages, setUploadedImages] = useState<UploadImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
 
   // การตั้งค่าการแจ้งเตือน
@@ -99,20 +117,80 @@ export default function CostumeForm() {
     buttons: [],
   });
 
+  // เพิ่มฟังก์ชันสำหรับตรวจสอบและสร้าง bucket
+  const checkAndCreateBucket = async (bucketName) => {
+    try {
+      console.log(`กำลังตรวจสอบ bucket: ${bucketName}`);
+      
+      // ตรวจสอบว่า bucket มีอยู่หรือไม่
+      const { data: bucketData, error: bucketError } = await supabase.storage.getBucket(bucketName);
+      
+      if (bucketError) {
+        console.log(`Bucket error:`, bucketError);
+        
+        // ถ้า bucket ไม่มีอยู่ ให้สร้างใหม่
+        if (bucketError.status === 404 || bucketError.message.includes('not found')) {
+          console.log(`กำลังสร้าง bucket "${bucketName}" เนื่องจากไม่พบ...`);
+          
+          const { data: createData, error: createError } = await supabase.storage.createBucket(bucketName, {
+            public: true,
+            fileSizeLimit: 10485760, // 10MB
+          });
+          
+          if (createError) {
+            console.error(`เกิดข้อผิดพลาดในการสร้าง bucket:`, createError);
+            return false;
+          }
+          
+          console.log(`สร้าง bucket "${bucketName}" สำเร็จ!`);
+          return true;
+        } else {
+          // ถ้าเกิดข้อผิดพลาดอื่นที่ไม่ใช่ "not found"
+          console.error(`เกิดข้อผิดพลาดในการตรวจสอบ bucket:`, bucketError);
+          return false;
+        }
+      }
+      
+      console.log(`พบ bucket "${bucketName}" แล้ว`);
+      return true;
+    } catch (error) {
+      console.error(`เกิดข้อผิดพลาดในการตรวจสอบหรือสร้าง bucket:`, error);
+      return false;
+    }
+  };
+
   // 2. Effects
   useEffect(() => {
-    // ขอสิทธิ์การใช้งานกล้องและแกลเลอรี่เมื่อโหลดคอมโพเนนต์
+    // เรียกใช้ฟังก์ชันตรวจสอบ bucket เมื่อโหลดคอมโพเนนต์
     (async () => {
+      // ตรวจสอบการล็อกอิน
+      if (!session || !session.user) {
+        showAlert("common.error", "costume.auth.required", [
+          {
+            text: t("common.ok"),
+            onPress: () => {
+              setAlertConfig((prev) => ({ ...prev, visible: false }));
+              router.back();
+            },
+          },
+        ]);
+        return;
+      }
+
+      // ขอสิทธิ์การใช้งานกล้องและแกลเลอรี่
       await ImagePicker.requestCameraPermissionsAsync();
       await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      // ตรวจสอบและสร้าง bucket หากจำเป็น
+      await checkAndCreateBucket("costume-images");
+      
+      // ดึงข้อมูลชุดเมื่อโหลดคอมโพเนนต์
+      if (isEditMode) {
+        fetchCostume();
+        fetchCostumeImages();
+      }
     })();
-
-    // ดึงข้อมูลชุดเมื่อโหลดคอมโพเนนต์
-    if (isEditMode) {
-      fetchCostume();
-      fetchCostumeImages();
-    }
-  }, [costumeId]);
+  }, [session, costumeId]);
 
   // จัดการปุ่มย้อนกลับ
   useEffect(() => {
@@ -245,10 +323,16 @@ export default function CostumeForm() {
   // 5. การจัดการรูปภาพ
   const selectImages = async () => {
     try {
-      const cameraPermission = await ImagePicker.getCameraPermissionsAsync();
-      const libraryPermission =
-        await ImagePicker.getMediaLibraryPermissionsAsync();
-
+      // ตรวจสอบสิทธิ์ก่อน
+      const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log("สถานะสิทธิ์การเข้าถึงแกลเลอรี่:", libraryStatus);
+      
+      if (libraryStatus !== 'granted') {
+        showAlert("common.error", "ไม่ได้รับอนุญาตให้เข้าถึงรูปภาพ");
+        return;
+      }
+      
+      // แสดงตัวเลือก
       Alert.alert(
         "เลือกรูปภาพ",
         "กรุณาเลือกวิธีการอัปโหลดรูปภาพ",
@@ -265,12 +349,16 @@ export default function CostumeForm() {
                   base64: true,
                 });
 
-                if (
-                  !result.canceled &&
-                  result.assets &&
-                  result.assets[0].base64
-                ) {
-                  handleImageResult(result);
+                if (!result.canceled && result.assets && result.assets.length > 0) {
+                  const newImages = result.assets.map(asset => ({
+                    uri: asset.uri,
+                    base64: asset.base64,
+                    type: 'image/jpeg',
+                    fileName: `image_${Date.now()}.jpg`
+                  }));
+                  
+                  setUploadedImages(prev => [...prev, ...newImages]);
+                  setHasUnsavedChanges(true);
                 }
               } catch (err) {
                 console.error("เกิดข้อผิดพลาดกับกล้อง:", err);
@@ -289,8 +377,16 @@ export default function CostumeForm() {
                   base64: true,
                 });
 
-                if (!result.canceled && result.assets) {
-                  handleImageResult(result);
+                if (!result.canceled && result.assets && result.assets.length > 0) {
+                  const newImages = result.assets.map(asset => ({
+                    uri: asset.uri,
+                    base64: asset.base64,
+                    type: asset.type || 'image/jpeg',
+                    fileName: asset.fileName || `image_${Date.now()}.jpg`
+                  }));
+                  
+                  setUploadedImages(prev => [...prev, ...newImages]);
+                  setHasUnsavedChanges(true);
                 }
               } catch (err) {
                 console.error("เกิดข้อผิดพลาดกับแกลเลอรี่:", err);
@@ -331,6 +427,7 @@ export default function CostumeForm() {
 
   const removeUploadedImage = (index: number) => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    setHasUnsavedChanges(true);
   };
 
   const removeExistingImage = (imageId: string) => {
@@ -338,8 +435,6 @@ export default function CostumeForm() {
     setCostumeImages(prev => prev.filter(img => img.id !== imageId));
     setHasUnsavedChanges(true);
   };
-
-  
 
   // จัดการการกดปุ่มยกเลิก
   const handleCancel = () => {
@@ -351,292 +446,325 @@ export default function CostumeForm() {
   };
 
   // แก้ไขฟังก์ชันอัปโหลดรูปภาพเพื่อให้ทำงานได้จริงกับ Supabase
-const uploadAndSaveImages = async (costumeId: string) => {
-  try {
-    // ตรวจสอบว่ามีรูปภาพที่จะอัปโหลดหรือไม่
-    if (uploadedImages.length === 0 && removedImageIds.length === 0) {
-      return true; // ไม่มีการเปลี่ยนแปลงรูปภาพ
-    }
-
-    // 1. ลบรูปภาพที่ถูกเลือกให้ลบ
-    if (removedImageIds.length > 0) {
-      // 1.1 ดึงข้อมูล URL รูปภาพเพื่อลบไฟล์จาก storage
-      const { data: imagesToRemove, error: fetchError } = await supabase
-        .from("costume_images")
-        .select("image_url")
-        .in("id", removedImageIds);
-
-      if (fetchError) {
-        console.error("เกิดข้อผิดพลาดในการดึงข้อมูลรูปภาพที่จะลบ:", fetchError);
-        throw fetchError;
+  const uploadAndSaveImages = async (costumeId: string) => {
+    try {
+      console.log("เริ่มต้น uploadAndSaveImages สำหรับ costumeId:", costumeId);
+      console.log("จำนวนรูปภาพที่อัปโหลด:", uploadedImages.length);
+      console.log("จำนวนรูปภาพที่ลบ:", removedImageIds.length);
+      
+      // ตรวจสอบว่ามีการเปลี่ยนแปลงรูปภาพหรือไม่
+      if (uploadedImages.length === 0 && removedImageIds.length === 0) {
+        console.log("ไม่พบการเปลี่ยนแปลงรูปภาพ ข้ามการอัปโหลด");
+        return true;
       }
 
-      // 1.2 ลบไฟล์จาก storage
-      for (const image of imagesToRemove || []) {
-        // ดึงเฉพาะส่วนพาธของไฟล์จาก URL
-        const filePathMatch = image.image_url.match(/costume-images\/([^?]+)/);
-        if (filePathMatch && filePathMatch[1]) {
-          const filePath = filePathMatch[1];
-          console.log("กำลังลบไฟล์:", filePath);
-          
-          const { error: removeError } = await supabase.storage
-            .from("costume-images")
-            .remove([filePath]);
+      // ตรวจสอบและสร้าง bucket หากยังไม่มี
+      const bucketReady = await checkAndCreateBucket("costume-images");
+      if (!bucketReady) {
+        console.error("ไม่สามารถเตรียม bucket ได้");
+        return false;
+      }
+  
+      // 1. ลบรูปภาพที่ถูกเลือกให้ลบ
+      if (removedImageIds.length > 0) {
+        console.log("กำลังลบรูปภาพที่มี ID:", removedImageIds);
+        
+        // 1.1 ดึงข้อมูล URL รูปภาพ
+        const { data: imagesToRemove, error: fetchError } = await supabase
+          .from("costume_images")
+          .select("image_url")
+          .in("id", removedImageIds);
+  
+        if (fetchError) {
+          console.error("เกิดข้อผิดพลาดในการดึงข้อมูลรูปภาพที่จะลบ:", fetchError);
+          throw fetchError;
+        }
+  
+        console.log("รูปภาพที่จะลบ:", imagesToRemove);
+  
+        // 1.2 ลบไฟล์จาก storage
+        for (const image of imagesToRemove || []) {
+          const filePathMatch = image.image_url.match(/costume-images\/([^?]+)/);
+          if (filePathMatch && filePathMatch[1]) {
+            const filePath = filePathMatch[1];
+            console.log("กำลังลบไฟล์จาก storage:", filePath);
             
-          if (removeError) {
-            console.error("เกิดข้อผิดพลาดในการลบไฟล์:", removeError);
-            // ไม่ throw error เพื่อให้กระบวนการดำเนินต่อไป
+            const { error: removeError } = await supabase.storage
+              .from("costume-images")
+              .remove([filePath]);
+              
+            if (removeError) {
+              console.error("เกิดข้อผิดพลาดในการลบไฟล์:", removeError);
+              // ดำเนินการต่อแม้จะมีข้อผิดพลาด
+            }
           }
         }
-      }
-
-      // 1.3 ลบข้อมูลจากตาราง costume_images
-      const { error: deleteError } = await supabase
-        .from("costume_images")
-        .delete()
-        .in("id", removedImageIds);
-
-      if (deleteError) {
-        console.error("เกิดข้อผิดพลาดในการลบข้อมูลรูปภาพ:", deleteError);
-        throw deleteError;
-      }
-    }
-
-    // 2. อัปโหลดรูปภาพใหม่
-    for (const image of uploadedImages) {
-      try {
-        // 2.1 สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
-        const fileName = `costume_${costumeId}_${Date.now()}_${Math.random().toString(36).substring(2, 10)}.jpg`;
-        
-        console.log("กำลังอัปโหลดรูปภาพ:", fileName);
-        
-        // 2.2 อัปโหลดรูปภาพไปยัง Supabase Storage
-        if (!image.base64) {
-          console.error("ไม่พบข้อมูล base64 ในรูปภาพ");
-          continue;
-        }
-        
-        const base64Data = image.base64.includes('base64,') 
-          ? image.base64.split('base64,')[1] 
-          : image.base64;
-          
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from("costume-images")
-          .upload(fileName, decode(base64Data), {
-            contentType: "image/jpeg",
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ:", uploadError);
-          continue; // ข้ามไปรูปถัดไปแทนที่จะหยุดทั้งหมด
-        }
-
-        // 2.3 ดึง URL สาธารณะของรูปภาพ
-        const { data: publicUrlData } = supabase.storage
-          .from("costume-images")
-          .getPublicUrl(fileName);
-
-        if (!publicUrlData || !publicUrlData.publicUrl) {
-          console.error("ไม่สามารถดึง URL สาธารณะของรูปภาพได้");
-          continue;
-        }
-        
-        console.log("อัปโหลดสำเร็จ, URL:", publicUrlData.publicUrl);
-
-        // 2.4 บันทึกข้อมูลรูปภาพลงในตาราง costume_images
-        const { error: insertError } = await supabase
+  
+        // 1.3 ลบข้อมูลจากตาราง costume_images
+        const { error: deleteError } = await supabase
           .from("costume_images")
-          .insert({
-            costume_id: costumeId,
-            image_url: publicUrlData.publicUrl,
-            created_at: new Date().toISOString(),
-          });
-
-        if (insertError) {
-          console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูลรูปภาพ:", insertError);
-          continue;
+          .delete()
+          .in("id", removedImageIds);
+  
+        if (deleteError) {
+          console.error("เกิดข้อผิดพลาดในการลบข้อมูลรูปภาพ:", deleteError);
+          throw deleteError;
         }
-      } catch (imageError) {
-        console.error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพ:", imageError);
-        // ดำเนินการต่อกับรูปถัดไป
+        
+        console.log("ลบรูปภาพจากฐานข้อมูลสำเร็จ");
       }
+      
+      // 2. อัปโหลดรูปภาพใหม่
+      console.log("เริ่มต้นการอัปโหลดรูปภาพใหม่");
+      const uploadResults = [];
+      
+      for (const image of uploadedImages) {
+        try {
+          console.log("กำลังประมวลผลรูปภาพ:", image.uri);
+          
+          // 2.1 สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
+          const fileExtension = image.uri.split('.').pop() || 'jpg';
+          const fileName = `costume_${costumeId}_${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
+          console.log("สร้างชื่อไฟล์:", fileName);
+          
+          let uploadError = null;
+          let uploadData = null;
+          
+          // 2.2 ตรวจสอบว่ามี base64 หรือไม่
+          if (image.base64) {
+            // อัปโหลดแบบ base64
+            console.log("กำลังอัปโหลดด้วย base64...");
+            const base64Data = image.base64.includes('base64,') 
+              ? image.base64.split('base64,')[1] 
+              : image.base64;
+              
+            const { error, data } = await supabase.storage
+              .from("costume-images")
+              .upload(fileName, decode(base64Data), {
+                contentType: "image/jpeg",
+                upsert: true,
+              });
+              
+            uploadError = error;
+            uploadData = data;
+          } else {
+            // อัปโหลดแบบ Blob
+            try {
+              console.log("กำลังดึงรูปภาพจาก URI เป็น Blob...");
+              const response = await fetch(image.uri);
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              const blob = await response.blob();
+              console.log("สร้าง blob สำเร็จ, ขนาด:", blob.size);
+              
+              const { error, data } = await supabase.storage
+                .from("costume-images")
+                .upload(fileName, blob, {
+                  contentType: "image/jpeg",
+                  upsert: true,
+                });
+                
+              uploadError = error;
+              uploadData = data;
+            } catch (fetchError) {
+              console.error("เกิดข้อผิดพลาดในการเตรียม Blob:", fetchError);
+              continue;
+            }
+          }
+  
+          if (uploadError) {
+            console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ:", uploadError);
+            continue;
+          }
+          
+          console.log("อัปโหลดสำเร็จ:", uploadData);
+  
+          // 2.4 ดึง URL สาธารณะของรูปภาพ
+          console.log("กำลังดึง URL สาธารณะ...");
+          const { data: publicUrlData } = supabase.storage
+            .from("costume-images")
+            .getPublicUrl(fileName);
+  
+          if (!publicUrlData || !publicUrlData.publicUrl) {
+            console.error("ไม่สามารถดึง URL สาธารณะของรูปภาพได้");
+            continue;
+          }
+          
+          console.log("URL สาธารณะ:", publicUrlData.publicUrl);
+          
+          // 2.5 บันทึกข้อมูลรูปภาพลงในตาราง costume_images
+          console.log("กำลังบันทึกข้อมูลรูปภาพลงในฐานข้อมูล...");
+          const { error: insertError, data: insertData } = await supabase
+            .from("costume_images")
+            .insert({
+              costume_id: costumeId,
+              image_url: publicUrlData.publicUrl,
+              created_at: new Date().toISOString(),
+            })
+            .select();
+  
+          if (insertError) {
+            console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูลรูปภาพ:", insertError);
+            continue;
+          }
+          
+          console.log("บันทึกรูปภาพลงในฐานข้อมูลสำเร็จ:", insertData);
+          uploadResults.push(insertData);
+          
+        } catch (imageError) {
+          console.error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพ:", imageError);
+        }
+      }
+  
+      console.log("กระบวนการอัปโหลดรูปภาพเสร็จสิ้นพร้อมผลลัพธ์:", uploadResults);
+      return true;
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ:", error);
+      return false;
     }
+  };
 
-    return true;
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ:", error);
-    return false;
-  }
-};
+  // ฟังก์ชันบันทึกชุด (แก้ไขใหม่)
+  const saveCostume = async () => {
+    try {
+      setLoading(true);
 
-useEffect(() => {
-  // ตรวจสอบการล็อกอิน
-  if (!session || !session.user) {
-    showAlert("common.error", "costume.auth.required", [
-      {
-        text: t("common.ok"),
-        onPress: () => {
-          setAlertConfig((prev) => ({ ...prev, visible: false }));
-          router.back(); // กลับไปหน้าก่อนหน้า
+      // ตรวจสอบว่ามี session อย่างรัดกุม
+      if (!session || !session.user || !session.user.id) {
+        console.log("Session User ID:", session?.user?.id);
+        console.log("Session User ID Type:", typeof session?.user?.id);
+        console.log("User ID from DB Auth:", await supabase.auth.getUser().then(res => res.data.user?.id));
+        showAlert("common.error", "costume.auth.required");
+        setLoading(false);
+        return;
+      }
+
+      // ตรวจสอบข้อมูลสำคัญต่อไป...
+      if (!costume?.name_th?.trim()) {
+        showAlert("common.error", "costume.validation.nameRequired");
+        setLoading(false);
+        return;
+      }
+
+      let costumeId;
+
+      // กรณีแก้ไข ใช้ ID เดิม
+      if (isEditMode && costume?.id) {
+        costumeId = costume.id;
+        
+        // อัปโหลดรูปภาพก่อน
+        console.log("กำลังอัปโหลดรูปภาพ...");
+        const imagesSuccess = await uploadAndSaveImages(costumeId);
+        
+        if (!imagesSuccess) {
+          console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+          throw new Error("ไม่สามารถอัปโหลดรูปภาพได้");
+        }
+        
+        console.log("อัปโหลดรูปภาพสำเร็จ");
+        
+        // จากนั้นค่อยอัปเดตข้อมูลชุด - แก้ไขเพื่อให้สอดคล้องกับโครงสร้างตาราง
+        const costumeData = {
+          user_id: session.user.id,
+          title: costume.name_th, 
+          price: costume.price,
+          test_price: costume.test_price,
+          deposit_amount: costume.deposit_amount,
+          available_sizes: costume.available_sizes,
+          size_measurements: costume.size_measurements,
+          available_slots: costume.available_slots || 1,
+          rent_duration: costume.rent_duration,
+          location: costume.location,
+          additional_notes: costume.additional_notes,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        };
+        
+        console.log("กำลังอัปเดตชุด ID:", costumeId);
+        console.log("ข้อมูลที่จะอัปเดต:", JSON.stringify(costumeData, null, 2));
+        
+        const { error } = await supabase
+          .from('costumes')
+          .update(costumeData)
+          .eq('id', costumeId);
+
+        if (error) {
+          console.error("เกิดข้อผิดพลาดในการอัปเดตชุด:", error);
+          console.error("รายละเอียด:", JSON.stringify(error, null, 2));
+          throw error;
+        }
+        
+        console.log("อัปเดตชุดสำเร็จ");
+      } else {
+        // กรณีเพิ่มชุดใหม่ สร้างข้อมูลชุดใน DB ก่อนเพื่อให้ได้ ID
+        const costumeData = {
+          user_id: session.user.id,
+          title: costume.name_th,
+          price: costume.price,
+          test_price: costume.test_price,
+          deposit_amount: costume.deposit_amount,
+          available_sizes: costume.available_sizes,
+          size_measurements: costume.size_measurements,
+          available_slots: costume.available_slots || 1,
+          rent_duration: costume.rent_duration,
+          location: costume.location,
+          additional_notes: costume.additional_notes,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        console.log("กำลังสร้างชุดใหม่");
+        console.log("ข้อมูลที่จะสร้าง:", JSON.stringify(costumeData, null, 2));
+        
+        const { data, error } = await supabase
+          .from('costumes')
+          .insert(costumeData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error("เกิดข้อผิดพลาดในการสร้างชุดใหม่:", error);
+          console.error("รายละเอียด:", JSON.stringify(error, null, 2));
+          throw error;
+        }
+        
+        costumeId = data.id;
+        console.log("สร้างชุดใหม่สำเร็จ ID:", costumeId);
+        
+        // อัปโหลดรูปภาพหลังจากได้ ID
+        console.log("กำลังอัปโหลดรูปภาพ...");
+        const imagesSuccess = await uploadAndSaveImages(costumeId);
+        
+        if (!imagesSuccess) {
+          console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+          throw new Error("ไม่สามารถอัปโหลดรูปภาพได้");
+        }
+        
+        console.log("อัปโหลดรูปภาพสำเร็จ");
+      }
+
+      // แสดงข้อความสำเร็จ
+      showAlert("common.success", isEditMode ? "costume.edit.success" : "costume.add.success", [
+        {
+          text: t("common.ok"),
+          onPress: () => {
+            setAlertConfig((prev) => ({ ...prev, visible: false }));
+            router.back();
+          },
         },
-      },
-    ]);
-  }
-
-  // ขอสิทธิ์การใช้งานกล้องและแกลเลอรี่เมื่อโหลดคอมโพเนนต์
-  (async () => {
-    await ImagePicker.requestCameraPermissionsAsync();
-    await ImagePicker.requestMediaLibraryPermissionsAsync();
-  })();
-
-  // ดึงข้อมูลชุดเมื่อโหลดคอมโพเนนต์
-  if (isEditMode) {
-    fetchCostume();
-    fetchCostumeImages();
-  }
-}, [session, costumeId]);
-
-// ฟังก์ชันบันทึกชุด (แก้ไขใหม่)
-const saveCostume = async () => {
-  try {
-    setLoading(true);
-
-    // ตรวจสอบว่ามี session อย่างรัดกุม
-    if (!session || !session.user || !session.user.id) {
-      console.log("Session User ID:", session?.user?.id);
-console.log("Session User ID Type:", typeof session?.user?.id);
-console.log("User ID from DB Auth:", await supabase.auth.getUser().then(res => res.data.user?.id));
-      showAlert("common.error", "costume.auth.required");
+      ]);
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการบันทึกชุด:", error);
+      console.error("รายละเอียดข้อผิดพลาด:", JSON.stringify(error, null, 2));
+      showAlert("common.error", "costume.edit.error");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // ตรวจสอบข้อมูลสำคัญต่อไป...
-    if (!costume?.name_th?.trim()) {
-      showAlert("common.error", "costume.validation.nameRequired");
-      setLoading(false);
-      return;
-    }
-
-    let costumeId;
-
-    // กรณีแก้ไข ใช้ ID เดิม
-    if (isEditMode && costume?.id) {
-      costumeId = costume.id;
-      
-      // อัปโหลดรูปภาพก่อน
-      console.log("กำลังอัปโหลดรูปภาพ...");
-      const imagesSuccess = await uploadAndSaveImages(costumeId);
-      
-      if (!imagesSuccess) {
-        console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
-        throw new Error("ไม่สามารถอัปโหลดรูปภาพได้");
-      }
-      
-      console.log("อัปโหลดรูปภาพสำเร็จ");
-      
-      // จากนั้นค่อยอัปเดตข้อมูลชุด - แก้ไขเพื่อให้สอดคล้องกับโครงสร้างตาราง
-      const costumeData = {
-        user_id: session.user.id,  // ใช้ค่าที่แน่นอนแล้ว
-        title: costume.name_th, 
-        price: costume.price,
-        test_price: costume.test_price,
-        deposit_amount: costume.deposit_amount,
-        available_sizes: costume.available_sizes,
-        size_measurements: costume.size_measurements,
-        available_slots: costume.available_slots || 1,
-        rent_duration: costume.rent_duration,
-        location: costume.location,
-        additional_notes: costume.additional_notes,
-        status: 'active',
-        updated_at: new Date().toISOString(),
-      };
-      
-      console.log("กำลังอัปเดตชุด ID:", costumeId);
-      console.log("ข้อมูลที่จะอัปเดต:", JSON.stringify(costumeData, null, 2));
-      
-      const { error } = await supabase
-        .from('costumes')
-        .update(costumeData)
-        .eq('id', costumeId);
-
-      if (error) {
-        console.error("เกิดข้อผิดพลาดในการอัปเดตชุด:", error);
-        console.error("รายละเอียด:", JSON.stringify(error, null, 2));
-        throw error;
-      }
-      
-      console.log("อัปเดตชุดสำเร็จ");
-      
-    } else {
-      // กรณีเพิ่มชุดใหม่ สร้างข้อมูลชุดใน DB ก่อนเพื่อให้ได้ ID
-      const costumeData = {
-        user_id: session.user.id,  // แก้ไข - ตัด ? ออก
-        title: costume.name_th,
-        price: costume.price,
-        test_price: costume.test_price,
-        deposit_amount: costume.deposit_amount,
-        available_sizes: costume.available_sizes,
-        size_measurements: costume.size_measurements,
-        available_slots: costume.available_slots || 1,
-        rent_duration: costume.rent_duration,
-        location: costume.location,
-        additional_notes: costume.additional_notes,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
-      console.log("กำลังสร้างชุดใหม่");
-      console.log("ข้อมูลที่จะสร้าง:", JSON.stringify(costumeData, null, 2));
-      
-      const { data, error } = await supabase
-        .from('costumes')
-        .insert(costumeData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("เกิดข้อผิดพลาดในการสร้างชุดใหม่:", error);
-        console.error("รายละเอียด:", JSON.stringify(error, null, 2));
-        throw error;
-      }
-      
-      costumeId = data.id;
-      console.log("สร้างชุดใหม่สำเร็จ ID:", costumeId);
-      
-      // อัปโหลดรูปภาพหลังจากได้ ID
-      console.log("กำลังอัปโหลดรูปภาพ...");
-      const imagesSuccess = await uploadAndSaveImages(costumeId);
-      
-      if (!imagesSuccess) {
-        console.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
-        throw new Error("ไม่สามารถอัปโหลดรูปภาพได้");
-      }
-      
-      console.log("อัปโหลดรูปภาพสำเร็จ");
-    }
-
-    // แสดงข้อความสำเร็จ
-    showAlert("common.success", isEditMode ? "costume.edit.success" : "costume.add.success", [
-      {
-        text: t("common.ok"),
-        onPress: () => {
-          setAlertConfig((prev) => ({ ...prev, visible: false }));
-          router.back();
-        },
-      },
-    ]);
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการบันทึกชุด:", error);
-    console.error("รายละเอียดข้อผิดพลาด:", JSON.stringify(error, null, 2));
-    showAlert("common.error", "costume.edit.error");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   // 7. การเรนเดอร์ UI
   return (
@@ -1146,7 +1274,7 @@ console.log("User ID from DB Auth:", await supabase.auth.getUser().then(res => r
         color: theme === "dark" ? "#fff" : "#333",
         fontWeight: "500"
       }}>
-        สถานที่รับส่ง
+        ตำแหน่งร้าน
       </Text>
       <TextInput
         value={costume?.location || ""}

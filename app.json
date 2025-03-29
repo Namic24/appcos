@@ -4,7 +4,7 @@
     "slug": "appcosplay",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://i.pinimg.com/736x/29/27/a7/2927a765fea640068d341ad60309180a.jpg",   
+    "icon": "https://i.pinimg.com/736x/29/27/a7/2927a765fea640068d341ad60309180a.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -58,7 +58,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8986c377-6551-48c0-b9dd-1c5bcd11a307"
+        "projectId": "74cb4615-7bff-4658-9cf6-8bb9fa081f10"
       }
     },
     "owner": "attitaya"

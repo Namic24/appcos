@@ -160,7 +160,7 @@ export default function login() {
               title={t("auth.login.button")}
               handlePress={submit}
               containerStyles="mt-7  bg-primary"
-              textStyles="!text-black"
+              textStyles="text-black"
               isLoading={isSubmitting}
             />
 

@@ -427,7 +427,7 @@ const changePassword = async () => {
 
     // Validate password fields
     if (!currentPassword) {
-      showAlert("common.error", "profile.password.currentRequired");
+      showAlert("common.error", "profile.sections.password.currentRequired");
       return;
     }
 
@@ -473,6 +473,8 @@ const changePassword = async () => {
     setLoading(false);
   }
 };
+
+
   // 7. UI Rendering
   return (
     <ScrollView>
@@ -527,7 +529,6 @@ const changePassword = async () => {
               padding: 16,
             }}
           >
-            // Changes to improve the profile editing page layout
 
 // 1. Improved Profile Header Section
 <View className="flex-row items-center mb-8 px-4 !bg-transparent">

@@ -380,7 +380,7 @@ export default function Profile() {
                 color: theme === "dark" ? "#FFA7D1" : "#FFA7D1",
               }}
             >
-              {t("profile.title")}
+              {t("profile.myProfile")}
             </Text>
             <TouchableOpacity
               onPress={() => {}}
@@ -406,9 +406,10 @@ export default function Profile() {
               shadowOpacity: theme === "dark" ? 0.3 : 0.1,
               shadowRadius: 5,
               elevation: 3,
+              borderRadius: 5
             }}
           >
-            <View className="flex-row">
+            <View className="flex-row ">
               {/* Avatar */}
               <View className="mr-4">
                 <View className="relative">
@@ -535,7 +536,7 @@ export default function Profile() {
                 className="text-center text-black"
                 weight="semibold"
               >
-                {t("profile.edit.title")}
+                {t("profile.editProfile")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -563,7 +564,7 @@ export default function Profile() {
                 fontSize: 18,
               }}
             >
-              คอสตูมของฉัน
+               {t("profile.myCostume")}
             </Text>
             <TouchableOpacity
               onPress={navigateToAddCostume}
@@ -640,7 +641,7 @@ export default function Profile() {
                 className="mt-2 text-center" 
                 style={{ color: theme === "dark" ? "#ccc" : "#666" }}
               >
-               {t("settings.addyourcostume")} คุณยังไม่มีคอสตูม กดปุ่ม + เพื่อเพิ่มคอสตูมใหม่
+               {t("profile.addyourcostume")} 
               </Text>
             </View>
           )}
@@ -668,14 +669,14 @@ export default function Profile() {
               fontSize: 18,
             }}
           >
-            {t("settings.title")}
+            {t("profile.settings")}
           </Text>
 
           <View style={{ backgroundColor: "transparent" }}>
             {/* Theme Toggle */}
             <SectionItem
               icon={theme === "dark" ? "moon" : "sun"}
-              text={t("settings.theme")}
+              text={t("settings.appearance.title")}
               onPress={toggleTheme}
               iconColor={theme === "dark" ? "#FFA7D1" : "#FFA7D1"}
               rightElement={
@@ -702,7 +703,7 @@ export default function Profile() {
             {/* Privacy */}
             <SectionItem
               icon="lock"
-              text={t("settings.privacy")}
+              text={t("settings.privacy.title")}
               onPress={() => {}}
               iconColor={theme === "dark" ? "#FFA7D1" : "#FFA7D1"}
             />
@@ -734,7 +735,7 @@ export default function Profile() {
             {/* Logout Button */}
             <SectionItem
               icon="log-out"
-              text={t("settings.logout.title")}
+              text={t("settings.logout.logout")}
               onPress={handleLogout}
               iconColor="#FF0000"
             />

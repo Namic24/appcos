@@ -79,9 +79,20 @@
   "profile": {
     "myProfile": "My Profile",
     "editProfile": "Edit Profile",
-    "myProducts": "My Products",
+    "personalInfo": "Personal Profile",
+    "myCostume": "My Costume",
     "settings": "Settings",
     "noName": "No Name",
+    "addyourcostume": "Addyourcostume",
+    "displayName": "Name",
+    "enterName": "enterName",
+    "gender": "Gender",
+    "enterGender": "Enter Gender",
+    "birthday": "Birthday",
+    "wearning": "*Once the birthday is set, it cannot be modified.",
+    "contactInfo": "My Contact",
+    "address": "My Address",
+    "editaddress": "Address",
     "buttons": {
       "saved": "Saved Items",
       "messages": "Messages",
@@ -117,7 +128,18 @@
         "title": "Account",
         "location": "Location",
         "security": "Security"
-      }
+      },
+        "password": {
+          "title": "Password",
+          "Change": "Change password",
+          "currentRequired": "Current Password",
+          "enterCurrent": "Enter current password",
+          "new" : "New password",
+          "newenter": "Enter new password",
+          "confirm": "Confirm New password",
+          "confirmenter":" Confirm new password",
+          "savepassword": "Save password"
+        }
     }
   },
   "settings": {
@@ -129,6 +151,8 @@
     "simpleCreate": "Use Simple Product Creation",
     "followers": "Allow People to Follow You",
     "customMessage": "Custom Message Settings",
+    "support": "Support",
+    "about": "About us",
     "privacy": {
       "title": "Privacy",
       "settings": "Privacy Settings",
